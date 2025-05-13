@@ -14,36 +14,37 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    // Dentro de tu método login (o el que maneje la autenticación manual):
     public function login(Request $request)
-{
-    $credentials = $request->only('email', 'password');
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
+        // Primero verificamos si el usuario existe y las credenciales son correctas
+        if (Auth::attempt($credentials)) {
+            // Ahora verificamos el estado del usuario
+            $user = Auth::user();
+            if (!$user->status) {
+                Auth::logout();
+                return back()
+                    ->withInput($request->only('email'))
+                    ->withErrors(['email' => 'Tu cuenta está desactivada. Por favor, contacta al administrador.']);
+            }
 
-        $user = Auth::user();
-        
-        // Guardar el rol en la sesión para fácil acceso
-        session(['user_role' => $user->rol]);
-        
-        if ($user->rol === 'admin') {
-            return redirect()->route('dashboard');
-        } elseif ($user->rol === 'vendedor') {
-            return redirect()->route('sales.create');
+            $request->session()->regenerate();
+
+            if ($user->rol === 'admin') {
+                return redirect()->intended('dashboard');
+            } else {
+                return redirect()->intended('sales/create');
+            }
         }
 
-        // Por si hay un rol desconocido
-        Auth::logout();
-        return redirect('/login')->withErrors([
-            'rol' => 'Rol no autorizado.',
-        ]);
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.']);
     }
-
-    return back()->withErrors([
-        'email' => 'Las credenciales no coinciden.',
-    ]);
-}
 
     public function showRegistrationForm()
     {
