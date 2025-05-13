@@ -34,7 +34,7 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
-            if ($user->rol === 'admin') {
+            if (in_array($user->rol, ['admin', 'gerente'])) {
                 return redirect()->intended('dashboard');
             } else {
                 return redirect()->intended('sales/create');

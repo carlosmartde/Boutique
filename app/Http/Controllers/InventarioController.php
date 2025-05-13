@@ -83,6 +83,10 @@ class InventarioController extends Controller
 {
     $userRole = Auth::user()->rol ?? null;
     
+    if ($userRole === 'gerente') {
+        return null; // Gerente tiene acceso total
+    }
+    
     if (!$userRole || !in_array($userRole, $allowedRoles)) {
         if ($userRole === 'vendedor') {
             return redirect()->route('sales.create')

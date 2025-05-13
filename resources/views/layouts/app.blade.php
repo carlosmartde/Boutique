@@ -215,16 +215,17 @@
 
         .custom-select-options {
             position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            z-index: 99999;
             background: white;
             border: 1px solid #ddd;
             border-radius: 0.25rem;
-            max-height: 250px;
+            height: auto;
+            max-height: 200px;
             overflow-y: auto;
             display: none;
+            z-index: 1031;
+            scrollbar-width: thin;
+            scrollbar-color: #3a86ff #f0f2f5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
@@ -233,8 +234,11 @@
         }
 
         .custom-select-option {
-            padding: 0.5rem 0.75rem;
+            padding: 0.75rem 1rem;
             cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .custom-select-option:hover {
@@ -243,6 +247,25 @@
 
         .custom-select-option.selected {
             background-color: #e9ecef;
+        }
+
+        /* Estilo para la barra de scroll */
+        .custom-select-options::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 4px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-thumb {
+            background: #3a86ff;
+            border-radius: 4px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-thumb:hover {
+            background: #2667cc;
         }
     </style>
     
@@ -272,7 +295,7 @@
                         <i class="bi bi-house-door"></i> Menu Principal
                     </a>
                     <ul class="nav flex-column">
-                        @if(Auth::user()->rol === 'admin')
+                        @if(Auth::user()->rol === 'admin' || Auth::user()->rol === 'gerente')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('products.create') ? 'active' : '' }}"
                                     href="{{ route('products.create') }}">
@@ -294,7 +317,7 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('inventario.mostrar-formulario') ? 'active' : '' }}"
                                     href="{{ route('inventario.mostrar-formulario') }}">
-                                    <i class="bi bi-plus-square"></i> Registra Compra
+                                    <i class="bi bi-plus-square"></i> Registrar Compra
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -303,6 +326,7 @@
                                     <i class="bi bi-file-earmark-bar-graph"></i> Reportes De Ventas
                                 </a>
                             </li>
+                            @if(Auth::user()->rol === 'gerente')
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('users.management') ? 'active' : '' }}"
                                     href="{{ route('users.management') }}">
@@ -315,6 +339,7 @@
                                     <i class="bi bi-person-plus"></i> Crear Usuario
                                 </a>
                             </li>
+                            @endif
                         @endif
                         <li class="nav-item mt-3">
                             <form action="{{ route('logout') }}" method="POST" class="px-3">
@@ -384,8 +409,7 @@
                 options.className = 'custom-select-options';
                 wrapper.appendChild(options);
 
-                // Mover al final del body para asegurar que esté por encima de todo
-                document.body.appendChild(options);
+                wrapper.appendChild(options);
 
                 // Poblar opciones
                 Array.from(select.options).forEach((option, index) => {
@@ -427,8 +451,40 @@
                         // Posicionar el dropdown correctamente
                         const rect = trigger.getBoundingClientRect();
                         options.style.width = rect.width + 'px';
-                        options.style.left = rect.left + 'px';
-                        options.style.top = (rect.bottom + window.scrollY) + 'px';
+                        const parent = trigger.closest('.custom-select-wrapper');
+                        const rect = trigger.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const footerHeight = 60; // altura aproximada del footer
+                        
+                        options.style.position = 'fixed';
+                        options.style.width = `${rect.width}px`;
+                        options.style.left = `${rect.left}px`;
+                        
+                        // Calcular espacio disponible arriba y abajo
+                        const spaceBelow = viewportHeight - rect.bottom - footerHeight;
+                        const spaceAbove = rect.top;
+                        
+                        if (spaceBelow >= 200) {
+                            // Si hay suficiente espacio abajo
+                            options.style.top = `${rect.bottom + window.scrollY}px`;
+                            options.style.maxHeight = `${Math.min(200, spaceBelow)}px`;
+                        } else if (spaceAbove >= 200) {
+                            // Si hay más espacio arriba
+                            options.style.bottom = `${viewportHeight - rect.top}px`;
+                            options.style.top = 'auto';
+                            options.style.maxHeight = `${Math.min(200, spaceAbove)}px`;
+                        } else {
+                            // Si no hay suficiente espacio en ninguna dirección, usar el espacio más grande
+                            const maxSpace = Math.max(spaceBelow, spaceAbove) - 20;
+                            if (spaceBelow >= spaceAbove) {
+                                options.style.top = `${rect.bottom + window.scrollY}px`;
+                                options.style.maxHeight = `${maxSpace}px`;
+                            } else {
+                                options.style.bottom = `${viewportHeight - rect.top}px`;
+                                options.style.top = 'auto';
+                                options.style.maxHeight = `${maxSpace}px`;
+                            }
+                        }
                     }
                 });
 

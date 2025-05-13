@@ -66,6 +66,7 @@
                                 <option value="" disabled selected>Seleccionar rol</option>
                                 <option value="admin" {{ old('rol') == 'admin' ? 'selected' : '' }}>Administrador</option>
                                 <option value="vendedor" {{ old('rol') == 'vendedor' ? 'selected' : '' }}>Vendedor</option>
+                                <option value="gerente" {{ old('rol') == 'gerente' ? 'selected' : '' }}>Gerente</option>
                             </select>
                         </div>
                         @error('rol')

@@ -11,18 +11,18 @@ class UserManagementController extends Controller
 {
     public function index()
     {
-        if (Auth::user()->rol !== 'admin') {
-            return redirect()->route('sales.create')
-                ->with('error', 'No tienes permiso para acceder a esta sección.');
+        if (Auth::user()->rol === 'gerente') {
+            $users = User::all();
+            return view('users.management', compact('users'));
         }
 
-        $users = User::all();
-        return view('users.management', compact('users'));
+        return redirect()->route('sales.create')
+            ->with('error', 'No tienes permiso para acceder a esta sección.');
     }
 
     public function toggleStatus($id)
     {
-        if (Auth::user()->rol !== 'admin') {
+        if (Auth::user()->rol !== 'gerente') {
             return redirect()->route('sales.create')
                 ->with('error', 'No tienes permiso para acceder a esta sección.');
         }

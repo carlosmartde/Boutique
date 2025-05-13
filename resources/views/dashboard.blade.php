@@ -16,7 +16,7 @@
                     <div class="icon-wrapper mb-3">
                         <i class="bi bi-bag-plus fs-1 text-primary"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Ingresar Producto</h5>
+                    <h5 class="card-title fw-bold">Nuevo Producto</h5>
                     <p class="card-text text-muted">Agrega nuevos productos al inventario</p>
                     <a href="{{ route('products.create') }}" class="btn btn-primary w-100">
                         <i class="bi bi-plus-circle me-2"></i>Ir a Productos
@@ -61,7 +61,7 @@
                     <div class="icon-wrapper mb-3">
                         <i class="bi bi-plus-square fs-1 text-primary"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Agregar al Inventario</h5>
+                    <h5 class="card-title fw-bold">Registrar Compra</h5>
                     <p class="card-text text-muted">Actualiza stock y precios de productos existentes</p>
                     <a href="{{ route('inventario.mostrar-formulario') }}" class="btn btn-primary w-100">
                         <i class="bi bi-arrow-up-circle me-2"></i>Actualizar Stock
@@ -80,6 +80,22 @@
                     <p class="card-text text-muted">Revisa los datos de las ventas realizadas</p>
                     <a href="{{ route('reports.index') }}" class="btn btn-primary w-100">
                         <i class="bi bi-graph-up me-2"></i>Ver Reportes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nueva card para Gestión de Usuarios -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-people fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Gestión de Usuarios</h5>
+                    <p class="card-text text-muted">Administra los usuarios del sistema</p>
+                    <a href="{{ route('users.management') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-gear-wide-connected me-2"></i>Administrar Usuarios
                     </a>
                 </div>
             </div>

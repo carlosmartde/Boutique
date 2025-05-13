@@ -46,4 +46,12 @@ class User extends Authenticatable
             'status' => 'boolean',
         ];
     }
+
+    public function hasRole($roles)
+    {
+        if (is_array($roles)) {
+            return in_array($this->rol, $roles);
+        }
+        return $this->rol === $roles;
+    }
 }
