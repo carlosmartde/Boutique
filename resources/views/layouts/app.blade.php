@@ -323,7 +323,19 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}"
                                     href="{{ route('reports.index') }}">
-                                    <i class="bi bi-file-earmark-bar-graph"></i> Reportes De Ventas
+                                    <i class="bi bi-file-earmark-bar-graph"></i> Reportes de Ventas
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('purchase_reports.index') ? 'active' : '' }}"
+                                    href="{{ route('purchase_reports.index') }}">
+                                    <i class="bi bi-cart-check"></i> Reportes de Compras
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('product_analysis.index') ? 'active' : '' }}"
+                                    href="{{ route('product_analysis.index') }}">
+                                    <i class="bi bi-graph-up"></i> Análisis de Productos
                                 </a>
                             </li>
                             @if(Auth::user()->rol === 'gerente')

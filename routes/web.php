@@ -9,6 +9,8 @@ use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\PurchaseReportController;
+use App\Http\Controllers\ProductReportController;
 
 // Rutas públicas
 Route::get('/', function () {
@@ -165,11 +167,33 @@ Route::middleware(['auth'])->group(function () {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(ReportController::class), 'detail'], ['id' => $id]);
         })->name('reports.detail');
+
+        // Rutas para reportes de compras
+        Route::get('/purchase-reports', function (Request $request) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(PurchaseReportController::class), 'index'], ['request' => $request]);
+        })->name('purchase_reports.index');
+
+        Route::get('/purchase-reports/{id}', function ($id) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(PurchaseReportController::class), 'detail'], ['id' => $id]);
+        })->name('purchase_reports.detail');
     });
 
     // Rutas para la gestión de usuarios - solo gerente
     Route::middleware(['auth'])->group(function () {
         Route::get('/users/management', [UserManagementController::class, 'index'])->name('users.management');
         Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
+    });
+
+    // Rutas de análisis de productos - accesible para admin y gerente
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/product-analysis', function (Request $request) {
+            if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'No tienes permiso para acceder a esta sección.');
+            }
+            return app()->call([app(ProductReportController::class), 'index'], ['request' => $request]);
+        })->name('product_analysis.index');
     });
 });

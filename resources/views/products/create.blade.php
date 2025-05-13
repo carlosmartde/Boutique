@@ -1,59 +1,49 @@
 @extends('layouts.app')
 
-@section('title', 'Ingresar Producto')
+@section('title', 'Nuevo Producto')
 
 @section('content')
 <div class="card">
     <div class="card-header">
         <h5 class="mb-0">
-            <i class="bi bi-bag-plus me-2"></i>Ingresar Nuevo Producto
+            <i class="bi bi-bag-plus me-2"></i>Nuevo Producto
         </h5>
     </div>
-    <div class="card-body">
-        @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>¡Error!</strong> Por favor corrige los siguientes errores:
-            <ul class="mb-0 mt-2">
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        @endif
 
-        <form method="POST" action="{{ route('products.store') }}">
+    <div class="card-body">
+        <form id="productForm" method="POST" action="{{ route('products.store') }}">
             @csrf
             
-            <div class="mb-3">
+            <div class="mb-4">
                 <label for="code" class="form-label fw-bold">Código del Producto</label>
                 <input type="text" class="form-control" id="code" name="code" value="{{ old('code') }}" required>
             </div>
             
-            <div class="mb-3">
+            <div class="mb-4">
                 <label for="name" class="form-label fw-bold">Nombre del Producto</label>
                 <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
             </div>
             
-            <div class="mb-3">
+            <div class="mb-4">
                 <label for="brand" class="form-label fw-bold">Marca</label>
                 <input type="text" class="form-control" id="brand" name="brand" value="{{ old('brand') }}" required>
             </div>
             
-            <div class="mb-3">
-                <label for="purchase_price" class="form-label fw-bold">Precio de Compra</label>
-                <div class="input-group">
-                    <span class="input-group-text">Q</span>
-                    <input type="number" step="0.01" class="form-control" id="purchase_price" name="purchase_price" value="{{ old('purchase_price') }}" required>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="purchase_price" class="form-label fw-bold">Precio de Compra</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Q</span>
+                        <input type="number" step="0.01" class="form-control" id="purchase_price" name="purchase_price" value="{{ old('purchase_price') }}" required>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="sale_price" class="form-label fw-bold">Precio de Venta</label>
-                <div class="input-group">
-                    <span class="input-group-text">Q</span>
-                    <input type="number" step="0.01" class="form-control" id="sale_price" name="sale_price" value="{{ old('sale_price') }}" required>
+                
+                <div class="col-md-6">
+                    <label for="sale_price" class="form-label fw-bold">Precio de Venta</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Q</span>
+                        <input type="number" step="0.01" class="form-control" id="sale_price" name="sale_price" value="{{ old('sale_price') }}" required>
+                    </div>
                 </div>
             </div>
             
@@ -70,4 +60,62 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('productForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Deshabilitar el botón de envío
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        
+        // Obtener los datos del formulario
+        const formData = new FormData(form);
+        
+        // Enviar la solicitud AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message,
+                    confirmButtonColor: '#3a86ff'
+                }).then(() => {
+                    // Limpiar el formulario
+                    form.reset();
+                    // Habilitar el botón de envío
+                    submitButton.disabled = false;
+                });
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            // Mostrar mensaje de error
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Ocurrió un error al crear el producto',
+                confirmButtonColor: '#3a86ff'
+            });
+            // Habilitar el botón de envío
+            submitButton.disabled = false;
+        });
+    });
+});
+</script>
 @endsection

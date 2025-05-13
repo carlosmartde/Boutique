@@ -39,23 +39,28 @@ public function index(Request $request)
 
     $users = User::orderBy('name')->get();
 
-    // Todas las ventas en el rango (sin paginar aún)
+    // Obtener todas las ventas en el rango (sin paginar aún)
     $salesQuery = $this->getSalesByPeriod($period, $date, $userId);
-    $sales = $salesQuery->paginate(10);
 
     // Obtener todos los IDs de las ventas en esta consulta
     $saleIds = $salesQuery->pluck('sales.id');
 
     // Obtener los detalles de venta relacionados y sumar totales
     $totales = SaleDetail::whereIn('sale_id', $saleIds)
-        ->selectRaw('SUM(cost_total) as total_cost, SUM(profit) as total_profit')
+        ->selectRaw('SUM(cost_total) as total_cost, SUM(subtotal - cost_total) as total_profit')
         ->first();
 
     $totalCost = $totales->total_cost ?? 0;
     $totalProfit = $totales->total_profit ?? 0;
 
+    // Calcular el total de ventas según el filtro
+    $totalSales = $salesQuery->sum('total');
+
+    // Paginar las ventas para la vista
+    $sales = $salesQuery->paginate(10);
+
     return view('reports.index', compact(
-        'sales', 'period', 'date', 'users', 'userId', 'totalCost', 'totalProfit'
+        'sales', 'period', 'date', 'users', 'userId', 'totalCost', 'totalProfit', 'totalSales'
     ));
 }
 
@@ -74,33 +79,35 @@ public function index(Request $request)
                     ->select('sales.*', 'users.name as user_name')
                     ->join('users', 'sales.user_id', '=', 'users.id');
         
-        // Filtro por usuario
         if ($userId !== 'all') {
             $query->where('sales.user_id', $userId);
         }
         
-        switch ($period) {
-            case 'day':
-                $query->whereDate('sales.created_at', $date);
-                break;
-                
-            case 'week':
-                $startOfWeek = Carbon::parse($date)->startOfWeek();
-                $endOfWeek = Carbon::parse($date)->endOfWeek();
-                $query->whereBetween('sales.created_at', [$startOfWeek, $endOfWeek]);
-                break;
-                
-            case 'month':
-                $startOfMonth = Carbon::parse($date)->startOfMonth();
-                $endOfMonth = Carbon::parse($date)->endOfMonth();
-                $query->whereBetween('sales.created_at', [$startOfMonth, $endOfMonth]);
-                break;
-                
-            case 'year':
-                $startOfYear = Carbon::parse($date)->startOfYear();
-                $endOfYear = Carbon::parse($date)->endOfYear();
-                $query->whereBetween('sales.created_at', [$startOfYear, $endOfYear]);
-                break;
+        // Solo aplicar filtro de mes si el periodo es 'month'
+        if ($period === 'month' && request()->has('month') && request('month') !== '') {
+            $query->whereMonth('sales.created_at', request('month'));
+            $year = Carbon::parse($date)->year;
+            $query->whereYear('sales.created_at', $year);
+        } else {
+            switch ($period) {
+                case 'day':
+                    $query->whereDate('sales.created_at', $date);
+                    break;
+                case 'week':
+                    $startOfWeek = Carbon::parse($date)->startOfWeek();
+                    $endOfWeek = Carbon::parse($date)->endOfWeek();
+                    $query->whereBetween('sales.created_at', [$startOfWeek, $endOfWeek]);
+                    break;
+                case 'month':
+                    $startOfMonth = Carbon::parse($date)->startOfMonth();
+                    $endOfMonth = Carbon::parse($date)->endOfMonth();
+                    $query->whereBetween('sales.created_at', [$startOfMonth, $endOfMonth]);
+                    break;
+                case 'year':
+                    $year = Carbon::parse($date)->year;
+                    $query->whereYear('sales.created_at', $year);
+                    break;
+            }
         }
         
         return $query->orderBy('sales.created_at', 'desc');

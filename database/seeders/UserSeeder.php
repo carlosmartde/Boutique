@@ -13,28 +13,28 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Usuario Admin
+        // Crear usuario admin
         User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@minimarket.com',
-            'password' => Hash::make('admin123'),
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
             'rol' => 'admin',
         ]);
 
-        // Usuario Vendedor
+        // Crear usuario gerente
         User::create([
-            'name' => 'Vendedor User',
-            'email' => 'vendedor@minimarket.com',
-            'password' => Hash::make('vendedor123'),
-            'rol' => 'vendedor',
+            'name' => 'Gerente',
+            'email' => 'gerente@example.com',
+            'password' => Hash::make('password'),
+            'rol' => 'gerente',
         ]);
 
-        // Usuario Gerente
+        // Crear usuario vendedor
         User::create([
-            'name' => 'Gerente User',
-            'email' => 'gerente@minimarket.com',
-            'password' => Hash::make('gerente123'),
-            'rol' => 'gerente',
+            'name' => 'Vendedor',
+            'email' => 'vendedor@example.com',
+            'password' => Hash::make('password'),
+            'rol' => 'vendedor',
         ]);
     }
 }

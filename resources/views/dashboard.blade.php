@@ -85,6 +85,21 @@
             </div>
         </div>
 
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-cart-check fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Reporte de compras</h5>
+                    <p class="card-text text-muted">Revisa los datos de las compras realizadas</p>
+                    <a href="{{ route('purchase_reports.index') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-graph-up me-2"></i>Ver Reportes
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Nueva card para Gestión de Usuarios -->
         <div class="col-md-4 mb-4">
             <div class="card h-100">
@@ -111,6 +126,22 @@
                     <p class="card-text text-muted">Crear nuevos usuarios admin o vendedores</p>
                     <a href="{{ route('register') }}" class="btn btn-primary w-100">
                         <i class="bi bi-person-badge me-2"></i>Crear Usuario
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Análisis de Productos -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-graph-up fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Análisis de Productos</h5>
+                    <p class="card-text text-muted">Analiza el rendimiento de tus productos</p>
+                    <a href="{{ route('product_analysis.index') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-chart-bar me-2"></i>Ver Análisis
                     </a>
                 </div>
             </div>
