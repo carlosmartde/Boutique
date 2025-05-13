@@ -8,6 +8,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Http\Controllers\UserManagementController;
 
 // Rutas públicas
 Route::get('/', function () {
@@ -173,4 +174,8 @@ Route::middleware(['auth'])->group(function () {
         }
         return app()->call([app(ReportController::class), 'detail'], ['id' => $id]);
     })->name('reports.detail');
+
+    // Rutas para la gestión de usuarios
+    Route::get('/users/management', [UserManagementController::class, 'index'])->name('users.management');
+    Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
 });

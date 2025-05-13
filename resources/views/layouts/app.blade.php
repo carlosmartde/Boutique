@@ -304,6 +304,12 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('users.management') ? 'active' : '' }}"
+                                    href="{{ route('users.management') }}">
+                                    <i class="bi bi-people"></i> Gestión de Usuarios
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}"
                                     href="{{ route('register') }}">
                                     <i class="bi bi-person-plus"></i> Crear Usuario
@@ -333,6 +339,7 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Toggle sidebar script
         document.addEventListener('DOMContentLoaded', function () {
@@ -449,6 +456,7 @@
         });
     </script>
 
+    <script src="{{ asset('js/user-management.js') }}"></script>
     @yield('scripts')
 </body>
 </html>
