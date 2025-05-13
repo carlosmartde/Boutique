@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\PurchaseReportController;
 
 // Rutas públicas
 Route::get('/', function () {
@@ -165,6 +166,17 @@ Route::middleware(['auth'])->group(function () {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(ReportController::class), 'detail'], ['id' => $id]);
         })->name('reports.detail');
+
+        // Rutas para reportes de compras
+        Route::get('/purchase-reports', function (Request $request) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(PurchaseReportController::class), 'index'], ['request' => $request]);
+        })->name('purchase_reports.index');
+
+        Route::get('/purchase-reports/{id}', function ($id) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(PurchaseReportController::class), 'detail'], ['id' => $id]);
+        })->name('purchase_reports.detail');
     });
 
     // Rutas para la gestión de usuarios - solo gerente

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -45,19 +46,55 @@ public function index()
 
     public function store(Request $request)
     {
-        $request->validate([
-            'code' => 'required|unique:products',
-            'name' => 'required',
-            'brand' => 'required',
-            'purchase_price' => 'required|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0|gt:purchase_price',
-            'stock' => 'required|integer|min:0',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        Product::create($request->all());
+            $request->validate([
+                'code' => 'required|unique:products',
+                'name' => 'required',
+                'brand' => 'required',
+                'purchase_price' => 'required|numeric|min:0',
+                'sale_price' => 'required|numeric|min:0|gt:purchase_price',
+                'stock' => 'required|integer|min:0',
+            ]);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Producto creado exitosamente.');
+            // Crear el producto
+            $product = Product::create($request->all());
+
+            // Calcular el subtotal de la compra inicial
+            $subtotal = $request->stock * $request->purchase_price;
+
+            // Crear el registro de compra inicial
+            $purchase = \App\Models\Purchase::create([
+                'user_id' => Auth::id(),
+                'total' => $subtotal,
+                'supplier_name' => 'Compra Inicial',
+                'notes' => 'Registro inicial del producto'
+            ]);
+
+            // Crear el detalle de la compra inicial
+            \App\Models\PurchaseDetail::create([
+                'purchase_id' => $purchase->id,
+                'product_id' => $product->id,
+                'quantity' => $request->stock,
+                'price' => $request->purchase_price,
+                'subtotal' => $subtotal
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto creado exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el producto: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getProductByCode($code)

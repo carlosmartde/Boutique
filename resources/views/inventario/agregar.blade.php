@@ -75,6 +75,17 @@
                 </div>
             </div>
 
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="supplier_name" class="form-label fw-bold">Nombre del Proveedor:</label>
+                    <input type="text" class="form-control" id="supplier_name" name="supplier_name">
+                </div>
+                <div class="col-md-6">
+                    <label for="notes" class="form-label fw-bold">Notas:</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="1"></textarea>
+                </div>
+            </div>
+
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-success">
                     <i class="bi bi-check2-circle me-2"></i>Actualizar Inventario

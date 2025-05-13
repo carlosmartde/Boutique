@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log; // Importar Log
 use Illuminate\Support\Facades\Auth;
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 
 class InventarioController extends Controller
 {
@@ -53,27 +54,51 @@ class InventarioController extends Controller
     {
         try {
             $request->validate([
-                'producto_id' => 'required|exists:products,id', // Cambiado 'productos' a 'products'
+                'producto_id' => 'required|exists:products,id',
                 'cantidad_nueva' => 'required|numeric|min:1',
                 'precio_compra' => 'required|numeric|min:0',
-                'precio_venta' => 'required|numeric|min:0'
+                'precio_venta' => 'required|numeric|min:0',
+                'supplier_name' => 'nullable|string|max:255',
+                'notes' => 'nullable|string'
             ]);
+
+            DB::beginTransaction();
 
             $producto = Product::findOrFail($request->producto_id);
             
-            // Actualizar stock
-            $producto->stock += $request->cantidad_nueva;
+            // Calcular el subtotal de la compra
+            $subtotal = $request->cantidad_nueva * $request->precio_compra;
             
-            // Actualizar precios
+            // Crear el registro de compra
+            $purchase = \App\Models\Purchase::create([
+                'user_id' => Auth::id(),
+                'total' => $subtotal,
+                'supplier_name' => $request->supplier_name,
+                'notes' => $request->notes
+            ]);
+
+            // Crear el detalle de la compra
+            \App\Models\PurchaseDetail::create([
+                'purchase_id' => $purchase->id,
+                'product_id' => $producto->id,
+                'quantity' => $request->cantidad_nueva,
+                'price' => $request->precio_compra,
+                'subtotal' => $subtotal
+            ]);
+            
+            // Actualizar stock y precios del producto
+            $producto->stock += $request->cantidad_nueva;
             $producto->purchase_price = $request->precio_compra;
             $producto->sale_price = $request->precio_venta;
-            
             $producto->save();
+            
+            DB::commit();
             
             return redirect()->route('inventario.mostrar-formulario')
                 ->with('success', 'Inventario actualizado correctamente');
 
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error('Error al actualizar inventario: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error al actualizar el inventario.');
         }
