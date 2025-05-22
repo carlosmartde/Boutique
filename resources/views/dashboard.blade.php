@@ -101,7 +101,7 @@
         </div>
 
         <!-- Nueva card para Gestión de Usuarios -->
-        @if(Auth::user()->rol === 'gerente')
+        @if(Auth::user()->rol === 'gerente' || Auth::user()->rol === 'admin')
         <div class="col-md-4 mb-4">
             <div class="card h-100">
                 <div class="card-body text-center p-4">
