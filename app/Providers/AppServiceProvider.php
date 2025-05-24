@@ -1,30 +1,28 @@
 <?php
 
-namespace App\Providers;
+namespace App\Http\Middleware;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Middleware\TrustProxies as Middleware;
+use Illuminate\Http\Request;
 
-
-
-class AppServiceProvider extends ServiceProvider
+class TrustProxies extends Middleware
 {
     /**
-     * Register any application services.
+     * The trusted proxies for this application.
+     *
+     * @var array|string|null
      */
-    public function register(): void
-    {
-        //
-    }
+    protected $proxies = '*';
 
     /**
-     * Bootstrap any application services.
+     * The headers that should be used to detect proxies.
+     *
+     * @var int
      */
-    public function boot()
-    {
-        if ($this->app->environment('production')) {
-            URL::forceScheme('https');
-            $this->app['request']->server->set('HTTPS', true);
-        }
-    }
+    protected $headers =
+        Request::HEADER_X_FORWARDED_FOR |
+        Request::HEADER_X_FORWARDED_HOST |
+        Request::HEADER_X_FORWARDED_PORT |
+        Request::HEADER_X_FORWARDED_PROTO |
+        Request::HEADER_X_FORWARDED_AWS_ELB;
 }
