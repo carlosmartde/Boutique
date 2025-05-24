@@ -8,11 +8,4 @@ export default defineConfig({
             refresh: true,
         }),
     ],
-    server: {
-        https: process.env.APP_ENV === 'production',
-        host: '0.0.0.0',
-        hmr: {
-            host: process.env.VITE_APP_URL || 'localhost'
-        },
-    },
 });
