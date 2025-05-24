@@ -166,7 +166,7 @@
                         <!-- Productos con menor ingreso -->
                         <div class="col-md-6 mb-4">
                             <div class="card h-100">
-                                <div class="card-header bg-warning text-white">
+                                <div class="card-header bg-warning text-dark">
                                     <h5 class="mb-0">Top 10 Productos con Menor Ingreso</h5>
                                 </div>
                                 <div class="card-body">

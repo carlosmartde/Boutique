@@ -58,14 +58,15 @@
                         </div>
                     </div>
 
-                   <div class="mb-3">
+                    <div class="mb-4">
                         <label for="rol" class="form-label">Rol</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-                            <select id="rol" name="rol" class="form-control  @error('rol') is-invalid @enderror" required>
+                            <select id="rol" name="rol" class="form-select @error('rol') is-invalid @enderror" required>
                                 <option value="" disabled selected>Seleccionar rol</option>
                                 <option value="admin" {{ old('rol') == 'admin' ? 'selected' : '' }}>Administrador</option>
                                 <option value="vendedor" {{ old('rol') == 'vendedor' ? 'selected' : '' }}>Vendedor</option>
+                                <option value="gerente" {{ old('rol') == 'gerente' ? 'selected' : '' }}>Gerente</option>
                             </select>
                         </div>
                         @error('rol')
@@ -92,7 +93,7 @@
     }
     
     .card-header {
-        background: linear-gradient(135deg, var( --dark-primary-color), var(--secondary-color)) !important;
+        background: linear-gradient(135deg, #3a86ff, #8338ec) !important;
         padding: 1.25rem 1.5rem;
         border-bottom: none;
     }
@@ -101,14 +102,10 @@
         padding: 0.75rem 1rem;
         border-radius: 8px;
     }
-
-    
     
     .input-group-text {
         background-color: #f8f9fa;
         border-right: 0;
-        align-items: center;
-        display: flex;
     }
     
     .input-group .form-control, .input-group .form-select {
@@ -125,7 +122,7 @@
     }
     
     .btn-primary {
-        background: var( --dark-primary-color);
+        background: linear-gradient(135deg, #3a86ff, #8338ec);
         border: none;
         padding: 0.75rem 1.5rem;
         border-radius: 8px;
@@ -135,7 +132,7 @@
     }
     
     .btn-primary:hover {
-        background: var( --hover-color-button);
+        background: linear-gradient(135deg, #2667cc, #6019d1);
         transform: translateY(-2px);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
     }

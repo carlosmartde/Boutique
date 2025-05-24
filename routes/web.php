@@ -27,7 +27,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Ruta de registro (solo gerente)
 Route::get('/register', function () {
-    if (Auth::check() && Auth::user()->rol === 'gerente' || Auth::user()->rol === 'admin') {
+    if (Auth::check() && Auth::user()->rol === 'gerente') {
         return app()->call([app(AuthController::class), 'showRegistrationForm']);
     } else {
         return redirect()->route('sales.create')->with('error', 'Acceso denegado.');
@@ -37,7 +37,7 @@ Route::get('/register', function () {
 use App\Http\Auth\RegisteredUserController;
 
 Route::post('/register', function (Request $request) {
-    if (Auth::check() && Auth::user()->rol === 'gerente' || Auth::user()->rol === 'admin') {
+    if (Auth::check() && Auth::user()->rol === 'gerente') {
         return app()->call([app(RegisteredUserController::class), 'store'], ['request' => $request]);
     } else {
         return redirect()->route('sales.create')->with('error', 'Acceso denegado.');
