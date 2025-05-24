@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Previa de Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .preview-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 200px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .producto {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .producto input {
+            flex: 1;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        #ticket-preview {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulador de Ticket Térmico (80mm)</h1>
+    
+    <div class="container">
+        <div class="input-section">
+            <h2>Datos del Ticket</h2>
+            <form id="ticket-form">
+                <div class="form-group">
+                    <label for="nombreNegocio">Nombre del Negocio:</label>
+                    <input type="text" id="nombreNegocio" value="Mi Tienda" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" id="direccion" value="Calle Principal #123">
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefono">Teléfono:</label>
+                    <input type="text" id="telefono" value="Tel: 555-123-4567">
+                </div>
+                
+                <div class="form-group">
+                    <label for="rfc">RFC:</label>
+                    <input type="text" id="rfc" value="RFC: XAXX010101000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="numeroTicket">Número de Ticket:</label>
+                    <input type="text" id="numeroTicket" value="00001">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cajero">Cajero:</label>
+                    <input type="text" id="cajero" value="Cajero: Admin">
+                </div>
+                
+                <h3>Productos</h3>
+                <div id="productos-container">
+                    <div class="producto">
+                        <input type="text" placeholder="Producto" value="Producto 1" required>
+                        <input type="number" placeholder="Cantidad" value="1" required min="1">
+                        <input type="number" placeholder="Precio" value="99.50" required min="0" step="0.01">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" id="add-producto">Agregar Producto</button>
+                    <button type="button" id="remove-producto">Eliminar Último</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="metodoPago">Método de Pago:</label>
+                    <input type="text" id="metodoPago" value="Efectivo">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mensajePie">Mensaje de Pie:</label>
+                    <input type="text" id="mensajePie" value="¡Gracias por su compra!">
+                </div>
+                
+                <button type="submit">Generar Vista Previa</button>
+            </form>
+        </div>
+        
+        <div id="loading">Generando vista previa...</div>
+        
+        <div class="preview-section">
+            <h2>Vista Previa</h2>
+            <div id="ticket-preview"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('ticket-form');
+            const productosContainer = document.getElementById('productos-container');
+            const addButton = document.getElementById('add-producto');
+            const removeButton = document.getElementById('remove-producto');
+            const ticketPreview = document.getElementById('ticket-preview');
+            const loading = document.getElementById('loading');
+            
+            // Agregar producto
+            addButton.addEventListener('click', function() {
+                const productoDiv = document.createElement('div');
+                productoDiv.className = 'producto';
+                productoDiv.innerHTML = `
+                    <input type="text" placeholder="Producto" required>
+                    <input type="number" placeholder="Cantidad" value="1" required min="1">
+                    <input type="number" placeholder="Precio" value="0.00" required min="0" step="0.01">
+                `;
+                productosContainer.appendChild(productoDiv);
+            });
+            
+            // Eliminar último producto
+            removeButton.addEventListener('click', function() {
+                const productos = productosContainer.querySelectorAll('.producto');
+                if (productos.length > 1) {
+                    productosContainer.removeChild(productos[productos.length - 1]);
+                }
+            });
+            
+            // Enviar formulario
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Mostrar loading
+                loading.style.display = 'block';
+                ticketPreview.innerHTML = '';
+                
+                // Recopilar productos
+                const productos = [];
+                const productosElements = productosContainer.querySelectorAll('.producto');
+                productosElements.forEach(productoDiv => {
+                    const inputs = productoDiv.querySelectorAll('input');
+                    productos.push({
+                        nombre: inputs[0].value,
+                        cantidad: parseInt(inputs[1].value),
+                        precio: parseFloat(inputs[2].value)
+                    });
+                });
+                
+                // Construir datos
+                const datos = {
+                    nombreNegocio: document.getElementById('nombreNegocio').value,
+                    direccion: document.getElementById('direccion').value,
+                    telefono: document.getElementById('telefono').value,
+                    rfc: document.getElementById('rfc').value,
+                    numeroTicket: document.getElementById('numeroTicket').value,
+                    fecha: new Date().toLocaleDateString(),
+                    hora: new Date().toLocaleTimeString(),
+                    cajero: document.getElementById('cajero').value,
+                    productos: productos,
+                    metodoPago: document.getElementById('metodoPago').value,
+                    mensajePie: document.getElementById('mensajePie').value,
+                    // Datos de impresora ficticios para mantener compatibilidad
+                    impresora: { ip: '127.0.0.1', puerto: 9100 }
+                };
+                
+                try {
+                    // Enviar datos al servidor
+                    const response = await fetch('/imprimir', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(datos)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Mostrar vista previa
+                        ticketPreview.innerHTML = result.vistaPrevia;
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('Error de conexión: ' + error.message);
+                } finally {
+                    // Ocultar loading
+                    loading.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
