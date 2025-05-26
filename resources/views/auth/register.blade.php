@@ -7,7 +7,7 @@
     <div class="col-md-6">
         <div class="card shadow-lg">
             <div class="card-header bg-gradient text-white">
-                <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Registrarse</h4>
+                <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Crear Nuevo Usuario</h4>
             </div>
             <div class="card-body p-4">
                 <form method="POST" action="{{ route('register') }}">
@@ -76,7 +76,7 @@
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-person-plus-fill me-2"></i>Registrarse
+                            <i class="bi bi-person-plus-fill me-2"></i>Guardar Usuario
                         </button>
                     </div>
                 </form>
