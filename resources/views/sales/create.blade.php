@@ -98,12 +98,14 @@
             transition: all 0.3s;
             background: linear-gradient(135deg, var(--dark-primary-color), var(--secondary-color));
             border: none;
+            color: white;
         }
 
         #complete-sale:hover {
             transform: translateY(-3px);
             background: var(--hover-color-button);
             box-shadow: 0 6px 15px rgba(58, 134, 255, 0.4);
+            color: white;
         }
 
         /* Animación para productos recién agregados */
