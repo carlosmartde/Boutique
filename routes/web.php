@@ -48,6 +48,7 @@ Route::post('/register', function (Request $request) {
 Route::middleware(['auth'])->group(function () {
     
     // Rutas accesibles para todos los usuarios autenticados
+    Route::get('/inventory/export', [InventoryController::class, 'export'])->name('inventory.export');
     Route::get('/product/code/{code}', [SaleController::class, 'searchProductByCode']);
     Route::get('/sales/search/{code}', [SaleController::class, 'searchProductByCode']);
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
@@ -166,6 +167,11 @@ Route::middleware(['auth'])->group(function () {
             return app()->call([app(ReportController::class), 'index'], ['request' => $request]);
         })->name('reports.index');
 
+        Route::get('/reports/export', function (Request $request) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(ReportController::class), 'export'], ['request' => $request]);
+        })->name('reports.export');
+
         Route::get('/reports/{id}', function ($id) use ($reportRoutes) {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(ReportController::class), 'detail'], ['id' => $id]);
@@ -176,6 +182,11 @@ Route::middleware(['auth'])->group(function () {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(PurchaseReportController::class), 'index'], ['request' => $request]);
         })->name('purchase_reports.index');
+
+        Route::get('/purchase-reports/export', function (Request $request) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(PurchaseReportController::class), 'export'], ['request' => $request]);
+        })->name('purchase_reports.export');
 
         Route::get('/purchase-reports/{id}', function ($id) use ($reportRoutes) {
             if ($redirect = $reportRoutes()) return $redirect;

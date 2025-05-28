@@ -1,78 +1,43 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Auth;
 
 use App\Models\Sale;
-use App\Models\SaleDetail;
 use App\Models\User;
+use App\Models\SaleDetail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Exports\SalesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
-    private function checkRole($allowedRoles = ['admin'])
-{
-    $userRole = Auth::user()->rol ?? null;
-    
-    if ($userRole === 'gerente') {
-        return null; // Gerente tiene acceso total
-    }
-    
-    if (!$userRole || !in_array($userRole, $allowedRoles)) {
-        if ($userRole === 'vendedor') {
-            return redirect()->route('sales.create')
-                ->with('error', 'No tienes permiso para acceder a esta sección.');
-        }
-        
-        return redirect()->route('login');
-    }
-    
-    return null; // No redirect needed
-}
-public function index(Request $request)
-{
-    $period = $request->period ?? 'day';
-    $date = $request->date ?? Carbon::now()->format('Y-m-d');
-    $userId = $request->user_id ?? 'all';
-
-    $users = User::orderBy('name')->get();
-
-    // Obtener todas las ventas en el rango (sin paginar aún)
-    $salesQuery = $this->getSalesByPeriod($period, $date, $userId);
-
-    // Obtener todos los IDs de las ventas en esta consulta
-    $saleIds = $salesQuery->pluck('sales.id');
-
-    // Obtener los detalles de venta relacionados y sumar totales
-    $totales = SaleDetail::whereIn('sale_id', $saleIds)
-        ->selectRaw('SUM(cost_total) as total_cost, SUM(subtotal - cost_total) as total_profit')
-        ->first();
-
-    $totalCost = $totales->total_cost ?? 0;
-    $totalProfit = $totales->total_profit ?? 0;
-
-    // Calcular el total de ventas según el filtro
-    $totalSales = $salesQuery->sum('total');
-
-    // Paginar las ventas para la vista
-    $sales = $salesQuery->paginate(10);
-
-    return view('reports.index', compact(
-        'sales', 'period', 'date', 'users', 'userId', 'totalCost', 'totalProfit', 'totalSales'
-    ));
-}
-
-    
-    public function detail($id)
+    public function index(Request $request)
     {
-        $sale = Sale::with(['details.product', 'user'])->findOrFail($id);
+        $period = $request->period ?? 'day';
+        $date = $request->date ?? Carbon::now()->format('Y-m-d');
+        $userId = $request->user_id ?? 'all';
+        $month = $request->month;
+
+        $users = User::orderBy('name')->get();
+        $salesQuery = $this->getSalesByPeriod($period, $date, $userId);
         
-        return view('reports.detail', compact('sale'));
+        $saleIds = $salesQuery->pluck('sales.id');
+        $totales = SaleDetail::whereIn('sale_id', $saleIds)
+            ->selectRaw('SUM(cost_total) as total_cost, SUM(subtotal - cost_total) as total_profit')
+            ->first();
+
+        $totalCost = $totales->total_cost ?? 0;
+        $totalProfit = $totales->total_profit ?? 0;
+        $totalSales = $salesQuery->sum('total');
+        $sales = $salesQuery->paginate(10);
+
+        return view('reports.index', compact(
+            'sales', 'period', 'date', 'users', 'userId', 'totalCost', 'totalProfit', 'totalSales'
+        ));
     }
-    
-    
+
     private function getSalesByPeriod($period, $date, $userId)
     {
         $query = Sale::with('user')
@@ -83,9 +48,9 @@ public function index(Request $request)
             $query->where('sales.user_id', $userId);
         }
         
-        // Solo aplicar filtro de mes si el periodo es 'month'
-        if ($period === 'month' && request()->has('month') && request('month') !== '') {
-            $query->whereMonth('sales.created_at', request('month'));
+        if ($period === 'month' && request('month') !== null && request('month') !== '') {
+            $month = intval(request('month'));
+            $query->whereMonth('sales.created_at', $month);
             $year = Carbon::parse($date)->year;
             $query->whereYear('sales.created_at', $year);
         } else {
@@ -111,5 +76,63 @@ public function index(Request $request)
         }
         
         return $query->orderBy('sales.created_at', 'desc');
+    }
+
+    private function getMonthName($month)
+    {
+        $months = [
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre'
+        ];
+        return $months[$month] ?? '';
+    }
+
+    public function export(Request $request)
+    {
+        $period = $request->period ?? 'day';
+        $date = $request->date ?? Carbon::now()->format('Y-m-d');
+        $userId = $request->user_id ?? 'all';
+        $month = $request->month ? intval($request->month) : null;
+
+        $fileName = 'reporte_ventas_';
+        switch ($period) {
+            case 'day':
+                $fileName .= Carbon::parse($date)->format('d-m-Y');
+                break;
+            case 'week':
+                $fileName .= Carbon::parse($date)->startOfWeek()->format('d-m-Y') . '_a_' . 
+                           Carbon::parse($date)->endOfWeek()->format('d-m-Y');
+                break;
+            case 'month':
+                if ($month) {
+                    $fileName .= 'mes_de_' . $this->getMonthName($month) . '_' . 
+                               Carbon::parse($date)->format('Y');
+                } else {
+                    $fileName .= Carbon::parse($date)->format('d-m-Y');
+                }
+                break;
+            case 'year':
+                $fileName .= Carbon::parse($date)->format('d-m-Y');
+                break;
+        }
+        $fileName .= '.xlsx';
+
+        return Excel::download(new SalesExport($period, $date, $userId, $month), $fileName);
+    }
+
+    public function detail($id)
+    {
+        $sale = Sale::with(['details.product', 'user'])->findOrFail($id);
+        return view('reports.detail', compact('sale'));
     }
 }

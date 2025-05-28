@@ -64,9 +64,12 @@
                             </select>
                         </div>
                         
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary">Filtrar</button>
-                            <a href="{{ route('reports.index') }}" class="btn btn-secondary ms-2">Reiniciar</a>
+                        <div class="col-md-12 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary px-4">Filtrar</button>
+                            <a href="{{ route('reports.index') }}" class="btn btn-secondary px-4">Reiniciar</a>
+                            <a href="{{ route('reports.export') }}?{{ http_build_query(request()->query()) }}" class="btn btn-success px-4">
+                                <i class="bi bi-filetype-xlsx me-1"></i>Exportar a Excel
+                            </a>
                         </div>
                     </form>
 

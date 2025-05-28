@@ -5,9 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\InventoryExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InventoryController extends Controller
 {
+    public function export() 
+    {
+        $date = now()->format('d-m-Y');
+        return Excel::download(new InventoryExport(), "inventario_{$date}.xlsx");
+    }
 
     public function search(Request $request)
  {

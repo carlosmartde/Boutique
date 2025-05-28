@@ -9,6 +9,9 @@
             <h5 class="mb-0">
                 <i class="bi bi-box me-2"></i>Inventario de Productos
             </h5>
+            <a href="{{ route('inventory.export') }}" class="btn btn-success px-4">
+                <i class="bi bi-filetype-xlsx me-1"></i>Exportar a Excel
+            </a>
         </div>
         <div class="card-body">
             <div class="mb-3">
