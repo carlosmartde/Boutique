@@ -1,10 +1,10 @@
 <!-- Modal de Facturación -->
-<div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="invoiceModalLabel">Generar Factura</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" id="closeModalBtn"></button>
             </div>
             <div class="modal-body">                <form id="invoiceForm">
                     <input type="hidden" id="sale_id" name="sale_id">
@@ -53,7 +53,7 @@
                     </div>
                 </form>
             </div>            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" id="cancelInvoiceBtn">Cancelar</button>
                 <button type="button" class="btn btn-info" id="saveAndPrintInvoice">
                     <i class="bi bi-printer me-2"></i>Guardar e Imprimir
                 </button>
@@ -119,6 +119,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // C/F button click handler
     cfButton.addEventListener('click', fillAsCF);
+
+    // Manejador para el botón de cerrar y cancelar
+    function handleCloseAttempt() {
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: 'Si cancela la facturación, se anulará la venta. ¿Desea continuar?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, anular venta',
+            cancelButtonText: 'No, continuar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const saleId = document.getElementById('sale_id').value;
+                
+                // Mostrar indicador de carga
+                Swal.fire({
+                    title: 'Procesando...',
+                    text: 'Anulando la venta',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Hacer la petición para anular la venta
+                fetch(`/sales/${saleId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Venta Anulada',
+                            text: 'La venta ha sido anulada correctamente',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // Cerrar el modal y refrescar la página actual
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
+                            modal.hide();
+                            location.reload();
+                        });
+                    } else {
+                        throw new Error(data.message || 'Error al anular la venta');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error',
+                        text: error.message || 'Error al anular la venta',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            }
+        });
+    }
+
+    // Event listeners para los botones de cerrar y cancelar
+    document.getElementById('closeModalBtn').addEventListener('click', handleCloseAttempt);
+    document.getElementById('cancelInvoiceBtn').addEventListener('click', handleCloseAttempt);
 
     // Form validation before submission
     form.addEventListener('submit', function(event) {

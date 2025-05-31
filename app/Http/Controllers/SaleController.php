@@ -135,4 +135,38 @@ class SaleController extends Controller
             ], 500);
         }
     }
+
+    public function cancel($id)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $sale = Sale::with('details.product')->findOrFail($id);
+            
+            // Revertir el stock de los productos
+            foreach ($sale->details as $detail) {
+                $product = $detail->product;
+                $product->stock += $detail->quantity;
+                $product->save();
+            }
+            
+            // Eliminar la venta y sus detalles (usando eliminación en cascada)
+            $sale->delete();
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Venta anulada correctamente'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error al anular la venta: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al anular la venta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

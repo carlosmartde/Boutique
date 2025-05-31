@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sales/search/{code}', [SaleController::class, 'searchProductByCode']);
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+    Route::delete('/sales/{id}', [SaleController::class, 'cancel'])->name('sales.cancel');
     
     // Dashboard - accesible para admin, gerente y vendedor
     Route::get('/dashboard', function () {
