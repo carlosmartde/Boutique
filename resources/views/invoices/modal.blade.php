@@ -88,6 +88,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }    // Function to fill C/F data
     function fillAsCF() {
+        if (saleTotal >= 2500) {
+            Swal.fire({
+                title: 'No permitido',
+                text: 'Para ventas de Q2,500 o más, debe ingresar los datos completos del cliente.',
+                icon: 'warning',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#3a86ff'
+            });
+            return;
+        }
         document.getElementById('customer_name').value = 'Consumidor Final';
         document.getElementById('customer_nit').value = 'C/F';
         document.getElementById('customer_address').value = 'Ciudad';

@@ -15,6 +15,16 @@ class InvoiceController extends Controller
 
         // Check if total is under Q2,500 for automatic C/F
         $isCF = $total < 2500;
+        
+        // Si el total es >= Q2,500 y los datos son de C/F, rechazar
+        if ($total >= 2500 && 
+            ($request->customer_name === 'Consumidor Final' || 
+             $request->customer_nit === 'C/F')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Para ventas de Q2,500 o más, todos los datos del cliente son obligatorios.'
+            ], 422);
+        }
 
         // Validate input based on total amount
         if (!$isCF) {

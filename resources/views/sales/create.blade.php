@@ -245,7 +245,29 @@
         }
 
         function submitInvoiceForm(shouldPrint = false) {
-            const formData = new FormData(document.getElementById('invoiceForm'));
+            const form = document.getElementById('invoiceForm');
+            const saleTotal = parseFloat(document.getElementById('sale_total').value || 0);
+            
+            if (saleTotal >= 2500) {
+                const requiredFields = ['customer_name', 'customer_nit', 'customer_address'];
+                const emptyFields = requiredFields.filter(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    return field && !field.value.trim();
+                });
+
+                if (emptyFields.length > 0) {
+                    Swal.fire({
+                        title: 'Datos requeridos',
+                        text: 'Para ventas de Q2,500 o más, todos los datos del cliente son obligatorios.',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#3a86ff'
+                    });
+                    return;
+                }
+            }
+            
+            const formData = new FormData(form);
             
             fetch('/invoices', {
                 method: 'POST',
