@@ -18,15 +18,18 @@ return new class extends Migration
             $table->decimal('monto_inicial', 10, 2)->default(0);
             // Debe existir antes de agregar campos en 2025_10_29_000001_add_fields_to_cajas_table
             $table->decimal('monto_final', 10, 2)->nullable();
-            $table->boolean('abierta')->default(true);
-            $table->timestamp('abierta_en')->useCurrent();
-            $table->timestamp('cerrada_en')->nullable();
+            $table->enum('estado', ['abierto', 'cerrado'])->default('abierto');
+            $table->dateTime('fecha_apertura');
+            $table->dateTime('fecha_cierre')->nullable();
             $table->timestamps();
         });
     }
 
-    public function down(): void
+      public function down(): void
     {
+        Schema::table('cajas', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+        });
         Schema::dropIfExists('cajas');
     }
 };

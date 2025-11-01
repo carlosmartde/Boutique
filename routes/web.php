@@ -1,86 +1,117 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\BarcodeController;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\PurchaseReportController;
 use App\Http\Controllers\ProductReportController;
+use App\Http\Controllers\CajaController;
+use App\Http\Controllers\ReporteCajaController;
+use App\Http\Auth\RegisteredUserController;
 
-// Rutas públicas
+// ============================================
+// Rutas Públicas
+// ============================================
 Route::get('/', function () {
     return view('welcome');
 });
 
-//Ruta para el envio de notificacion via correo gmail
-Route::get('/test-notification/{productId}', [App\Http\Controllers\NotificationTestController::class, 'testLowStockNotification'])->name('test.notification');
-
-// Rutas de autenticación
+// ============================================
+// Rutas de Autenticación
+// ============================================
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Ruta de registro (solo gerente)
+// Ruta de registro (admin y gerente)
 Route::get('/register', function () {
-    if (Auth::check() && Auth::user()->rol === 'gerente') {
+    if (Auth::check() && in_array(Auth::user()->rol, ['admin', 'gerente'])) {
         return app()->call([app(AuthController::class), 'showRegistrationForm']);
     } else {
         return redirect()->route('sales.create')->with('error', 'Acceso denegado.');
     }
 })->middleware('auth')->name('register');
 
-use App\Http\Auth\RegisteredUserController;
-
 Route::post('/register', function (Request $request) {
-    if (Auth::check() && Auth::user()->rol === 'gerente') {
+    if (Auth::check() && in_array(Auth::user()->rol, ['admin', 'gerente'])) {
         return app()->call([app(RegisteredUserController::class), 'store'], ['request' => $request]);
     } else {
         return redirect()->route('sales.create')->with('error', 'Acceso denegado.');
     }
 })->middleware('auth');
 
-// Rutas que requieren autenticación
+// ============================================
+// Rutas con Autenticación
+// ============================================
 Route::middleware(['auth'])->group(function () {
     
-    // Rutas accesibles para todos los usuarios autenticados
-    Route::get('/inventory/export', [InventoryController::class, 'export'])->name('inventory.export');
+    // ============================================
+    // Rutas de Notificaciones (Testing)
+    // ============================================
+    Route::get('/test-notification/{productId}', [App\Http\Controllers\NotificationTestController::class, 'testLowStockNotification'])->name('test.notification');
     
-    // Rutas para el generador de códigos de barras
-    Route::get('/barcodes', [BarcodeController::class, 'index'])->name('barcodes.index');
-    Route::get('/barcodes/random', [BarcodeController::class, 'generateRandom'])->name('barcodes.generate-random');
-    Route::post('/barcodes/pdf', [BarcodeController::class, 'generatePDF'])->name('barcodes.generate-pdf');
-
+    // ============================================
+    // Rutas de Caja (Todos los usuarios autenticados)
+    // ============================================
+    Route::get('/caja/apertura', [CajaController::class, 'index'])->name('caja.apertura');
+    Route::get('/caja/create', [CajaController::class, 'create'])->name('caja.create');
+    Route::post('/caja/apertura', [CajaController::class, 'store'])->name('caja.store');
+    Route::post('/caja/cerrar', [CajaController::class, 'cerrar'])->name('caja.cerrar');
+    Route::get('/caja/movimiento', [CajaController::class, 'movimiento'])->name('caja.movimiento');
+    Route::post('/caja/movimiento', [CajaController::class, 'guardarMovimiento'])->name('caja.movimiento.guardar');
+    Route::get('/caja/arqueo', [CajaController::class, 'arqueo'])->name('caja.arqueo');
+    Route::post('/caja/arqueo', [CajaController::class, 'guardarArqueo'])->name('caja.arqueo.guardar');
+    Route::post('/caja/cancelar', [CajaController::class, 'cancelar'])->name('caja.cancelar');
+    Route::get('/caja/{caja}', [CajaController::class, 'show'])->name('caja.show');
+    Route::get('/caja/{caja}/edit', [CajaController::class, 'edit'])->name('caja.edit');
+    Route::put('/caja/{caja}', [CajaController::class, 'update'])->name('caja.update');
+    Route::delete('/caja/{caja}', [CajaController::class, 'destroy'])->name('caja.destroy');
+    
+    // ============================================
+    // Rutas de Ventas (Todos los usuarios autenticados)
+    // ============================================
     Route::get('/product/code/{code}', [SaleController::class, 'searchProductByCode']);
     Route::get('/sales/search/{code}', [SaleController::class, 'searchProductByCode']);
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
     Route::delete('/sales/{id}', [SaleController::class, 'cancel'])->name('sales.cancel');
     
-    // Dashboard - accesible para admin, gerente y vendedor
+    // ============================================
+    // Rutas de Códigos de Barras (Todos los usuarios autenticados)
+    // ============================================
+    Route::get('/barcodes', [BarcodeController::class, 'index'])->name('barcodes.index');
+    Route::get('/barcodes/random', [BarcodeController::class, 'generateRandom'])->name('barcodes.generate-random');
+    Route::post('/barcodes/pdf', [BarcodeController::class, 'generatePDF'])->name('barcodes.generate-pdf');
+    
+    // ============================================
+    // Rutas de Facturación (Todos los usuarios autenticados)
+    // ============================================
+    Route::resource('invoices', App\Http\Controllers\InvoiceController::class)->only(['index', 'store', 'show']);
+    
+    // ============================================
+    // Dashboard (Admin y Gerente)
+    // ============================================
     Route::get('/dashboard', function () {
-        if (Auth::user()->rol === 'gerente') {
-            return view('dashboard');
-        }
-        if (!in_array(Auth::user()->rol, ['admin'])) {
+        if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
             return redirect()->route('sales.create')
                 ->with('error', 'No tienes permiso para acceder a esta sección.');
         }
         return view('dashboard');
     })->name('dashboard');
 
-    // Rutas de productos - accesible para admin y gerente
+    // ============================================
+    // Rutas de Productos (Admin y Gerente)
+    // ============================================
     Route::middleware(['auth'])->group(function () {
         $productRoutes = function () {
-            if (Auth::user()->rol === 'gerente') {
-                return null;
-            }
-            if (!in_array(Auth::user()->rol, ['admin'])) {
+            if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
                 return redirect()->route('sales.create')
                     ->with('error', 'No tienes permiso para acceder a esta sección.');
             }
@@ -102,6 +133,11 @@ Route::middleware(['auth'])->group(function () {
             return app()->call([app(ProductController::class), 'store'], ['request' => $request]);
         })->name('products.store');
 
+        Route::get('/products/{product}', function ($product) use ($productRoutes) {
+            if ($redirect = $productRoutes()) return $redirect;
+            return app()->call([app(ProductController::class), 'show'], ['product' => $product]);
+        })->name('products.show');
+
         Route::get('/products/{product}/edit', function ($product) use ($productRoutes) {
             if ($redirect = $productRoutes()) return $redirect;
             return app()->call([app(ProductController::class), 'edit'], ['product' => $product]);
@@ -118,13 +154,12 @@ Route::middleware(['auth'])->group(function () {
         })->name('products.destroy');
     });
 
-    // Rutas de inventario - accesible para admin y gerente
+    // ============================================
+    // Rutas de Inventario (Admin y Gerente)
+    // ============================================
     Route::middleware(['auth'])->group(function () {
         $inventoryRoutes = function () {
-            if (Auth::user()->rol === 'gerente') {
-                return null;
-            }
-            if (!in_array(Auth::user()->rol, ['admin'])) {
+            if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
                 return redirect()->route('sales.create')
                     ->with('error', 'No tienes permiso para acceder a esta sección.');
             }
@@ -136,10 +171,25 @@ Route::middleware(['auth'])->group(function () {
             return app()->call([app(InventoryController::class), 'index']);
         })->name('inventory.index');
 
+        Route::get('/inventory/export', function () use ($inventoryRoutes) {
+            if ($redirect = $inventoryRoutes()) return $redirect;
+            return app()->call([app(InventoryController::class), 'export']);
+        })->name('inventory.export');
+
         Route::get('/inventario/agregar', function () use ($inventoryRoutes) {
             if ($redirect = $inventoryRoutes()) return $redirect;
             return app()->call([app(App\Http\Controllers\InventarioController::class), 'mostrarFormularioAgregar']);
         })->name('inventario.mostrar-formulario');
+
+        Route::post('/inventario/importar', function (Request $request) use ($inventoryRoutes) {
+            if ($redirect = $inventoryRoutes()) return $redirect;
+            return app()->call([app(App\Http\Controllers\InventarioController::class), 'importar'], ['request' => $request]);
+        })->name('inventario.importar');
+
+        Route::get('/inventario/importar', function () use ($inventoryRoutes) {
+            if ($redirect = $inventoryRoutes()) return $redirect;
+            return app()->call([app(App\Http\Controllers\InventarioController::class), 'showImportar']);
+        })->name('inventario.showimportar');
 
         Route::post('/inventario/actualizar', function (Request $request) use ($inventoryRoutes) {
             if ($redirect = $inventoryRoutes()) return $redirect;
@@ -157,19 +207,19 @@ Route::middleware(['auth'])->group(function () {
         })->name('inventory.search');
     });
 
-    // Rutas de reportes - accesible para admin y gerente
+    // ============================================
+    // Rutas de Reportes (Admin y Gerente)
+    // ============================================
     Route::middleware(['auth'])->group(function () {
         $reportRoutes = function () {
-            if (Auth::user()->rol === 'gerente') {
-                return null;
-            }
-            if (!in_array(Auth::user()->rol, ['admin'])) {
+            if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
                 return redirect()->route('sales.create')
                     ->with('error', 'No tienes permiso para acceder a esta sección.');
             }
             return null;
         };
 
+        // Reportes de Ventas
         Route::get('/reports', function (Request $request) use ($reportRoutes) {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(ReportController::class), 'index'], ['request' => $request]);
@@ -185,7 +235,7 @@ Route::middleware(['auth'])->group(function () {
             return app()->call([app(ReportController::class), 'detail'], ['id' => $id]);
         })->name('reports.detail');
 
-        // Rutas para reportes de compras
+        // Reportes de Compras
         Route::get('/purchase-reports', function (Request $request) use ($reportRoutes) {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(PurchaseReportController::class), 'index'], ['request' => $request]);
@@ -200,15 +250,45 @@ Route::middleware(['auth'])->group(function () {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(PurchaseReportController::class), 'detail'], ['id' => $id]);
         })->name('purchase_reports.detail');
+
+        // Reportes de Caja
+        Route::get('/caja/reporte', function (Request $request) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(ReporteCajaController::class), 'reporte'], ['request' => $request]);
+        })->name('caja.reporte');
+
+        Route::get('/caja/reporte/{caja}', function ($caja) use ($reportRoutes) {
+            if ($redirect = $reportRoutes()) return $redirect;
+            return app()->call([app(ReporteCajaController::class), 'detalle'], ['caja' => $caja]);
+        })->name('caja.reporte.detalle');
     });
 
-    // Rutas para la gestión de usuarios - solo gerente
+    // ============================================
+    // Rutas de Gestión de Usuarios (Admin y Gerente)
+    // ============================================
     Route::middleware(['auth'])->group(function () {
-        Route::get('/users/management', [UserManagementController::class, 'index'])->name('users.management');
-        Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
+        $userRoutes = function () {
+            if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
+                return redirect()->route('sales.create')
+                    ->with('error', 'No tienes permiso para acceder a esta sección.');
+            }
+            return null;
+        };
+
+        Route::get('/users/management', function () use ($userRoutes) {
+            if ($redirect = $userRoutes()) return $redirect;
+            return app()->call([app(UserManagementController::class), 'index']);
+        })->name('users.management');
+
+        Route::patch('/users/{user}/toggle-status', function ($user) use ($userRoutes) {
+            if ($redirect = $userRoutes()) return $redirect;
+            return app()->call([app(UserManagementController::class), 'toggleStatus'], ['user' => $user]);
+        })->name('users.toggle-status');
     });
 
-    // Rutas de análisis de productos - accesible para admin y gerente
+    // ============================================
+    // Rutas de Análisis de Productos (Admin y Gerente)
+    // ============================================
     Route::middleware(['auth'])->group(function () {
         Route::get('/product-analysis', function (Request $request) {
             if (!in_array(Auth::user()->rol, ['admin', 'gerente'])) {
@@ -218,7 +298,4 @@ Route::middleware(['auth'])->group(function () {
             return app()->call([app(ProductReportController::class), 'index'], ['request' => $request]);
         })->name('product_analysis.index');
     });
-
-    // Rutas para la facturación
-    Route::resource('invoices', App\Http\Controllers\InvoiceController::class)->only(['index', 'store', 'show']);
 });
