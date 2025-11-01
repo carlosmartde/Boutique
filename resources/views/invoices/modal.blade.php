@@ -6,9 +6,10 @@
                 <h5 class="modal-title" id="invoiceModalLabel">Generar Factura</h5>
                 <button type="button" class="btn-close" id="closeModalBtn"></button>
             </div>
-            <div class="modal-body">                <form id="invoiceForm">
+        <div class="modal-body">                <form id="invoiceForm">
                     <input type="hidden" id="sale_id" name="sale_id">
                     <input type="hidden" id="sale_total" name="sale_total">
+            <input type="hidden" id="is_cf" name="is_cf" value="0">
                           <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label for="customer_name" class="form-label mb-0">Nombre del Cliente *</label>
@@ -104,10 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('customer_phone').value = 'N/A';
         document.getElementById('customer_email').value = 'N/A';
         document.getElementById('payment_method').value = 'cash';
+        document.getElementById('is_cf').value = '1';
         setFieldsRequired(false);
     }// When opening the modal
     document.getElementById('invoiceModal').addEventListener('show.bs.modal', function(event) {
         form.reset();
+        document.getElementById('is_cf').value = '0';
         
         // Get sale total from hidden input
         saleTotal = parseFloat(document.getElementById('sale_total').value || 0);

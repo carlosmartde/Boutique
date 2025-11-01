@@ -5,28 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\Sale;
 use Illuminate\Http\Request;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
-{    public function store(Request $request)
+    {    public function store(Request $request)
     {
         $sale = Sale::with('details.product')->findOrFail($request->sale_id);
         $total = $sale->total;
 
-        // Check if total is under Q2,500 for automatic C/F
-        $isCF = $total < 2500;
-        
-        // Si el total es >= Q2,500 y los datos son de C/F, rechazar
-        if ($total >= 2500 && 
-            ($request->customer_name === 'Consumidor Final' || 
-             $request->customer_nit === 'C/F')) {
+        // Determinar si es C/F según la intención del usuario
+        // o valores clásicos de C/F en el formulario
+        $isCF = (
+            $request->boolean('is_cf') ||
+            ($request->customer_name === 'Consumidor Final' && $request->customer_nit === 'C/F')
+        );
+
+        // Si el total es >= Q2,500 y los datos/intención son C/F, rechazar
+        if ($total >= 2500 && $isCF) {
             return response()->json([
                 'success' => false,
                 'message' => 'Para ventas de Q2,500 o más, todos los datos del cliente son obligatorios.'
             ], 422);
         }
-
-        // Validate input based on total amount
+        // Validar y construir la factura
         if (!$isCF) {
             $request->validate([
                 'sale_id' => 'required|exists:sales,id',
@@ -39,8 +40,9 @@ class InvoiceController extends Controller
             ]);
             
             $invoice = new Invoice($request->all());
+            $invoice->is_cf = false;
         } else {
-            // For C/F invoices, set default values
+            // Para C/F, usar valores por defecto
             $invoice = new Invoice([
                 'sale_id' => $sale->id,
                 'customer_name' => 'Consumidor Final',
@@ -116,7 +118,7 @@ class InvoiceController extends Controller
     protected function generatePDF(Invoice $invoice)
     {
         $sale = $invoice->sale->load('details.product', 'user');
-        $pdf = PDF::loadView('invoices.pdf', compact('invoice', 'sale'));
+    $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'sale'));
         
         return $pdf->stream("factura-{$invoice->invoice_number}.pdf");
     }

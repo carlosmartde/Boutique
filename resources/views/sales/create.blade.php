@@ -284,6 +284,7 @@
                     customer_phone: formData.get('customer_phone'),
                     customer_email: formData.get('customer_email'),
                     payment_method: formData.get('payment_method'),
+                    is_cf: formData.get('is_cf') === '1',
                     print: shouldPrint
                 })
             })
