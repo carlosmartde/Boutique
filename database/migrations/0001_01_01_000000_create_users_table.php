@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('rol', ['admin', 'vendedor'])->default('vendedor');
+            $table->string('enterprise')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -42,9 +43,14 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-    {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
-    }
+{
+    Schema::table('sessions', function (Blueprint $table) {
+        $table->dropForeign(['user_id']);
+    });
+
+    Schema::dropIfExists('sessions');
+    Schema::dropIfExists('password_reset_tokens');
+    Schema::dropIfExists('users');
+}
+
 };

@@ -17,6 +17,7 @@ class CreateProductsTable extends Migration
             $table->decimal('purchase_price', 10, 2);
             $table->decimal('sale_price', 10, 2);
             $table->integer('stock')->default(0);
+            $table->boolean('First_entry')->default(true);
             $table->timestamps();
         });
     }
