@@ -21,23 +21,35 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // Primero verificamos si el usuario existe y las credenciales son correctas
         if (Auth::attempt($credentials)) {
-            // Ahora verificamos el estado del usuario
+            $request->session()->regenerate();
+
             $user = Auth::user();
+
+            // Verificar si el usuario está activo
             if (!$user->status) {
-                Auth::logout();
+               $this->logout($request);
                 return back()
                     ->withInput($request->only('email'))
                     ->withErrors(['email' => 'Tu cuenta está desactivada. Por favor, contacta al administrador.']);
             }
 
-            $request->session()->regenerate();
+            // Guardar el rol en la sesión
+            session(['user_role' => $user->rol]);
 
-            if (in_array($user->rol, ['admin', 'gerente'])) {
-                return redirect()->intended('dashboard');
-            } else {
-                return redirect()->intended('sales/create');
+            // Redireccionar según el rol
+            switch ($user->rol) {
+                case 'admin':
+                    return redirect()->route('dashboard');
+                case 'vendedor':
+                    return redirect()->route('sales.create');
+                case 'gerente':
+                    return redirect()->route('dashboard');
+                default:
+                    $this->logout($request);
+                    return redirect('/login')->withErrors([
+                        'rol' => 'Rol no autorizado.',
+                    ]);
             }
         }
 
@@ -70,6 +82,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            $cajaAbierta = $user->cajas()->where('estado', 'abierto')->latest()->first();
+            if ($cajaAbierta) {
+                $cajaAbierta->update([
+                    'estado' => 'cerrado',
+                    'fecha_cierre' => now(),
+                    'onto_final' => $cajaAbierta->monto_final ?? $cajaAbierta->monto_inicial
+                ]);
+            }
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
