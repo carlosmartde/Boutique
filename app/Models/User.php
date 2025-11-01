@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Sale;
+use App\Models\Caja;
 
 class User extends Authenticatable
 {
@@ -20,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'rol',
+        'enterprise',
         'status'
     ];
 
@@ -54,4 +57,14 @@ class User extends Authenticatable
         }
         return $this->rol === $roles;
     }
+
+        public function sales()
+    {
+        return $this->hasMany(Sale::class);
+    }
+     public function cajas()
+    {
+        return $this->hasMany(Caja::class);
+    }
+
 }
