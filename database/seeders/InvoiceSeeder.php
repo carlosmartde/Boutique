@@ -31,12 +31,12 @@ class InvoiceSeeder extends Seeder
                 'invoice_number' => sprintf('FAC-%06d', $lastInvoiceNumber),
                 'customer_name' => $faker->name,
                 'customer_nit' => $faker->numberBetween(1000000, 9999999) . $faker->randomElement(['K', '']),
-                'customer_email' => $faker->optional(0.7)->safeEmail,
-                'customer_phone' => $faker->optional(0.8)->numerify('########'),
-                'customer_address' => $faker->optional(0.6)->address,
+                'customer_email' => $faker->optional(0.7)->safeEmail ?? 'N/A',
+                'customer_phone' => $faker->optional(0.8)->numerify('########') ?? 'N/A',
+                'customer_address' => $faker->optional(0.6)->address ?? 'N/A',
                 'payment_method' => $faker->randomElement(['cash', 'card', 'transfer']),
                 'total' => $sale->total,
-                'printed' => $faker->boolean(70), // 70% de probabilidad de que esté impresa
+                'is_cf' => $faker->boolean(30), // 30% de probabilidad de que sea C/F
                 'created_at' => $sale->created_at,
                 'updated_at' => $sale->created_at,
             ]);

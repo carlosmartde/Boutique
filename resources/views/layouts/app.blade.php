@@ -310,6 +310,20 @@
                                     <i class="bi bi-cart-plus"></i>Registrar Ventas
                                 </a>
                             </li>
+                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('caja.apertura') ? 'active' : '' }}"
+                                    href="{{ route('caja.apertura') }}">
+                                    <i class="bi bi-cash"></i> Caja
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}"
+                                    href="{{ route('caja.reporte') }}">
+                                    <i class="bi bi-cash-coin"></i> Reportes Cajas
+                                </a>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}"
                                     href="{{ route('inventory.index') }}">
@@ -353,6 +367,14 @@
                                     <i class="bi bi-people"></i> Gestión de Usuarios
                                 </a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}"
+                                    href="{{ route('caja.reporte') }}">
+                                    <i class="bi bi-cash-coin"></i> Reportes Cajas
+                                </a>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}"
                                     href="{{ route('register') }}">
@@ -361,6 +383,20 @@
                             </li>
                             @endif
                         @endif
+                         <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('caja.apertura') ? 'active' : '' }}"
+                                    href="{{ route('caja.apertura') }}">
+                                    <i class="bi bi-cash"></i> Caja
+                                </a>
+                            </li>
+
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('sales.create') ? 'active' : '' }}"
+                                    href="{{ route('sales.create') }}">
+                                    <i class="bi bi-cart-plus"></i> Nueva Venta
+                                </a>
+                            </li>
                         <li class="nav-item mt-3">
                             <form action="{{ route('logout') }}" method="POST" class="px-3">
                                 @csrf

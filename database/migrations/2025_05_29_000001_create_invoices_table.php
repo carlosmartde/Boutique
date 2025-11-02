@@ -13,13 +13,12 @@ return new class extends Migration
             $table->foreignId('sale_id')->constrained()->onDelete('cascade');
             $table->string('invoice_number')->unique();
             $table->string('customer_name');
-            $table->string('customer_nit')->nullable();
-            $table->string('customer_address')->nullable();
-            $table->string('customer_phone')->nullable();
-            $table->string('customer_email')->nullable();
+            $table->string('customer_nit')->default('N/A');
+            $table->string('customer_address')->default('N/A');
+            $table->string('customer_phone')->default('N/A');
+            $table->string('customer_email')->default('N/A');
             $table->enum('payment_method', ['cash', 'card', 'transfer']);
             $table->decimal('total', 10, 2);
-            $table->boolean('printed')->default(false);
             $table->timestamps();
         });
     }

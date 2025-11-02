@@ -48,6 +48,8 @@ class InvoiceController extends Controller
                 'customer_name' => 'Consumidor Final',
                 'customer_nit' => 'C/F',
                 'customer_address' => 'Ciudad',
+                'customer_phone' => 'N/A',
+                'customer_email' => 'N/A',
                 'payment_method' => 'cash',
                 'is_cf' => true
             ]);

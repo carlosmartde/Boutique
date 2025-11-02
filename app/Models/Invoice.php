@@ -15,7 +15,6 @@ class Invoice extends Model
         'customer_email',
         'payment_method',
         'total',
-        'printed',
         'is_cf'
     ];
 

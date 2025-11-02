@@ -11,8 +11,10 @@ class ReporteCajaController extends Controller
     public function reporte(Request $request)
     {
         $user = Auth::user();
-        if (!$user->hasRole(['admin', 'gerente'])) {
-            abort(403, 'No autorizado');
+        
+        // Verificación de roles simplificada
+        if (!in_array($user->rol, ['admin', 'gerente'])) {
+            return redirect()->route('sales.create')->with('error', 'No tienes permiso para acceder a esta sección.');
         }
 
         $query = Caja::query()->with('user');
@@ -41,14 +43,17 @@ class ReporteCajaController extends Controller
         }
 
         $cajas = $query->orderByDesc('fecha_apertura')->get();
+        
         return view('caja.reporte', compact('cajas', 'filtro', 'fecha'));
     }
 
     public function detalle(Caja $caja)
     {
         $user = Auth::user();
-        if (!$user->hasRole(['admin', 'gerente'])) {
-            abort(403, 'No autorizado');
+        
+        // Verificación de roles simplificada
+        if (!in_array($user->rol, ['admin', 'gerente'])) {
+            return redirect()->route('sales.create')->with('error', 'No tienes permiso para acceder a esta sección.');
         }
 
         $caja->load([
