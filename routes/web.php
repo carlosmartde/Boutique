@@ -69,10 +69,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/caja/arqueo', [CajaController::class, 'arqueo'])->name('caja.arqueo');
     Route::post('/caja/arqueo', [CajaController::class, 'guardarArqueo'])->name('caja.arqueo.guardar');
     Route::post('/caja/cancelar', [CajaController::class, 'cancelar'])->name('caja.cancelar');
-    Route::get('/caja/{caja}', [CajaController::class, 'show'])->name('caja.show');
-    Route::get('/caja/{caja}/edit', [CajaController::class, 'edit'])->name('caja.edit');
-    Route::put('/caja/{caja}', [CajaController::class, 'update'])->name('caja.update');
-    Route::delete('/caja/{caja}', [CajaController::class, 'destroy'])->name('caja.destroy');
+    Route::get('/caja/{caja}', [CajaController::class, 'show'])->whereNumber('caja')->name('caja.show');
+    Route::get('/caja/{caja}/edit', [CajaController::class, 'edit'])->whereNumber('caja')->name('caja.edit');
+    Route::put('/caja/{caja}', [CajaController::class, 'update'])->whereNumber('caja')->name('caja.update');
+    Route::delete('/caja/{caja}', [CajaController::class, 'destroy'])->whereNumber('caja')->name('caja.destroy');
     
     // ============================================
     // Rutas de Ventas (Todos los usuarios autenticados)
