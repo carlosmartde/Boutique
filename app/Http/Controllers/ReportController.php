@@ -16,8 +16,13 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
-    private function checkRole($allowedRoles = ['admin'])
+    private function checkRole($allowedRoles = ['admin', 'gerente'])
     {
+        // Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
         $userRole = Auth::user()->rol ?? null;
 
         if (!$userRole || !in_array($userRole, $allowedRoles)) {
@@ -26,7 +31,8 @@ class ReportController extends Controller
                     ->with('error', 'No tienes permiso para acceder a esta sección.');
             }
 
-            return redirect()->route('login');
+            return redirect()->route('sales.create')
+                ->with('error', 'No tienes permiso para acceder a esta sección.');
         }
 
         return null; // No redirect needed
@@ -149,7 +155,7 @@ class ReportController extends Controller
     public function export(Request $request)
     {
         // Verificar rol
-        $redirectCheck = $this->checkRole(['admin']);
+        $redirectCheck = $this->checkRole(['admin', 'gerente']);
         if ($redirectCheck) {
             return $redirectCheck;
         }
@@ -167,17 +173,17 @@ class ReportController extends Controller
         try {
             // Obtener todas las ventas (sin paginación para exportar todo)
             $salesQuery = $this->getSalesByPeriod($period, $fechaInicio, $fechaFin, $userId);
-            
+
             // Obtener las ventas con los campos necesarios para la exportación
             $sales = $salesQuery->get()->map(function ($sale) {
                 // Calcular totales por venta
                 $saleDetails = SaleDetail::where('sale_id', $sale->id)
                     ->selectRaw('SUM(cost_total) as total_cost, SUM(quantity * price) as total_sales')
                     ->first();
-                
+
                 $sale->total_cost = $saleDetails->total_cost ?? 0;
                 $sale->total_sales = $saleDetails->total_sales ?? 0;
-                
+
                 return $sale;
             });
 
@@ -193,15 +199,15 @@ class ReportController extends Controller
 
             // Generar nombre del archivo
             $periodText = $this->getPeriodTextForFilename($period);
-            $dateText = $period === 'custom' ? 
+            $dateText = $period === 'custom' ?
                 Carbon::parse($fechaInicio)->format('Y-m-d') . '_' . Carbon::parse($fechaFin)->format('Y-m-d') :
                 Carbon::parse($fechaInicio)->format('Y-m-d');
-            
+
             $filename = "reporte_ventas_{$periodText}_{$dateText}.xlsx";
 
-            // Exportar usando la clase Export
+            // Exportar usando la clase SalesReportExport nueva
             return Excel::download(
-                new SalesReportExport($sales, $totals, $period, $fechaInicio, $fechaFin, $userName),
+                new \App\Exports\SalesReportExport($sales, $totals, $period, $fechaInicio, $fechaFin, $userName),
                 $filename
             );
 

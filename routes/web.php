@@ -225,7 +225,7 @@ Route::middleware(['auth'])->group(function () {
             return app()->call([app(ReportController::class), 'index'], ['request' => $request]);
         })->name('reports.index');
 
-        Route::get('/reports/export', function (Request $request) use ($reportRoutes) {
+        Route::post('/reports/export', function (Request $request) use ($reportRoutes) {
             if ($redirect = $reportRoutes()) return $redirect;
             return app()->call([app(ReportController::class), 'export'], ['request' => $request]);
         })->name('reports.export');
