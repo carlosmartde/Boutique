@@ -1,29 +1,30 @@
-# Usa la imagen oficial de PHP 8.2 (puedes ajustar según tu versión)
-FROM php:8.2-cli
+# Usa la imagen oficial de PHP con extensiones comunes
+FROM php:8.2-fpm
 
-# Instala extensiones requeridas
+# Instala dependencias del sistema necesarias para GD y otras extensiones
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
     libzip-dev \
+    zip \
     unzip \
     git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd zip pdo_mysql
+    && docker-php-ext-install gd pdo_mysql zip
 
-# Copia los archivos del proyecto
-COPY . /app
+# Instala Composer desde la imagen oficial
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copia los archivos de tu aplicación
 WORKDIR /app
+COPY . .
 
-# Instala Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Instala dependencias de PHP
+RUN composer install --optimize-autoloader --no-scripts --no-interaction --no-dev
 
-# Instala dependencias
-RUN composer install --optimize-autoloader --no-dev --no-interaction
-
-# Expone el puerto de Laravel
+# Expone el puerto (el mismo que Laravel usa por defecto)
 EXPOSE 8000
 
-# Comando para iniciar Laravel
+# Comando de inicio
 CMD php artisan serve --host=0.0.0.0 --port=8000
