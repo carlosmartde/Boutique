@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ProductoImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log; // Importar Log
 use Illuminate\Support\Facades\Auth;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InventarioController extends Controller
 {
@@ -14,7 +16,24 @@ class InventarioController extends Controller
     {
         return view('inventario.agregar');
     }
+     public function showImportar()
+    {
+        return view('inventario.importar');
+    }
 
+    public function importar(Request $request)
+{
+    $request->validate([
+        'excel_file' => 'required|file|mimes:xlsx,xls|max:10240' // usa el mismo nombre del input
+    ]);
+
+    try {
+        Excel::import(new ProductoImport, $request->file('excel_file'));
+        return back()->with('success', '¡Productos importados correctamente!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Error al importar: ' . $e->getMessage());
+    }
+}
     public function buscarProducto(Request $request)
     {
         try {

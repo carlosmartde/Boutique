@@ -21,6 +21,7 @@ class productoTableSeeder extends Seeder
                 'purchase_price' => $faker->randomFloat(2, 10, 100), // Precio de compra entre 10 y 100
                 'sale_price' => $faker->randomFloat(2, 100, 200), // Precio de venta entre 100 y 200
                 'stock' => $faker->numberBetween(1, 100), // Stock entre 1 y 100
+                'First_entry'=> '1',
                 'created_at' => now(), // Fecha de creación actual
                 'updated_at' => now(), // Fecha de actualización actual
             ]);

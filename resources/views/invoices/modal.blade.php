@@ -6,9 +6,10 @@
                 <h5 class="modal-title" id="invoiceModalLabel">Generar Factura</h5>
                 <button type="button" class="btn-close" id="closeModalBtn"></button>
             </div>
-            <div class="modal-body">                <form id="invoiceForm">
+        <div class="modal-body">                <form id="invoiceForm">
                     <input type="hidden" id="sale_id" name="sale_id">
                     <input type="hidden" id="sale_total" name="sale_total">
+            <input type="hidden" id="is_cf" name="is_cf" value="0">
                           <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label for="customer_name" class="form-label mb-0">Nombre del Cliente *</label>
@@ -38,7 +39,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="customer_email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="customer_email" name="customer_email">
+                                <input type="text" class="form-control" id="customer_email" name="customer_email">
                             </div>
                         </div>
                     </div>
@@ -72,6 +73,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const requiredFields = ['customer_name', 'customer_nit', 'customer_address'];
     let saleTotal = 0;
 
+    // Valores por defecto de C/F para detectar cambios
+    const cfDefaults = {
+        customer_name: 'Consumidor Final',
+        customer_nit: 'C/F',
+        customer_address: 'Ciudad',
+        customer_phone: 'N/A',
+        customer_email: 'N/A'
+    };
+
     // Function to set required fields
     function setFieldsRequired(required) {
         requiredFields.forEach(fieldId => {
@@ -86,7 +96,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-    }    // Function to fill C/F data
+    }
+
+    // Detectar si el usuario ha modificado manualmente algún campo después de C/F
+    function detectManualChanges() {
+        const isCfField = document.getElementById('is_cf');
+        
+        // Solo verificar si is_cf está activo
+        if (isCfField.value !== '1') {
+            return;
+        }
+
+        // Verificar si algún campo difiere de los valores C/F por defecto
+        const fieldsToCheck = ['customer_name', 'customer_nit', 'customer_address', 'customer_phone', 'customer_email'];
+        
+        for (const fieldName of fieldsToCheck) {
+            const field = document.getElementById(fieldName);
+            if (field && field.value !== cfDefaults[fieldName]) {
+                // El usuario modificó un campo, desactivar is_cf
+                isCfField.value = '0';
+                
+                // Restaurar requisitos si el total >= 2500
+                if (saleTotal >= 2500) {
+                    setFieldsRequired(true);
+                }
+                
+                console.log(`Campo ${fieldName} modificado manualmente. Desactivando modo C/F.`);
+                break;
+            }
+        }
+    }
+
+    // Function to fill C/F data
     function fillAsCF() {
         if (saleTotal >= 2500) {
             Swal.fire({
@@ -98,16 +139,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             return;
         }
-        document.getElementById('customer_name').value = 'Consumidor Final';
-        document.getElementById('customer_nit').value = 'C/F';
-        document.getElementById('customer_address').value = 'Ciudad';
-        document.getElementById('customer_phone').value = 'N/A';
-        document.getElementById('customer_email').value = 'N/A';
+        document.getElementById('customer_name').value = cfDefaults.customer_name;
+        document.getElementById('customer_nit').value = cfDefaults.customer_nit;
+        document.getElementById('customer_address').value = cfDefaults.customer_address;
+        document.getElementById('customer_phone').value = cfDefaults.customer_phone;
+        document.getElementById('customer_email').value = cfDefaults.customer_email;
         document.getElementById('payment_method').value = 'cash';
+        document.getElementById('is_cf').value = '1';
         setFieldsRequired(false);
-    }// When opening the modal
+    }
+
+    // When opening the modal
     document.getElementById('invoiceModal').addEventListener('show.bs.modal', function(event) {
         form.reset();
+        document.getElementById('is_cf').value = '0';
         
         // Get sale total from hidden input
         saleTotal = parseFloat(document.getElementById('sale_total').value || 0);
@@ -119,6 +164,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // C/F button click handler
     cfButton.addEventListener('click', fillAsCF);
+
+    // Escuchar cambios en los campos del formulario para detectar edición manual
+    const fieldsToMonitor = ['customer_name', 'customer_nit', 'customer_address', 'customer_phone', 'customer_email'];
+    fieldsToMonitor.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            // Usar 'input' para detectar cambios en tiempo real
+            field.addEventListener('input', detectManualChanges);
+            // También escuchar 'change' para selects y casos especiales
+            field.addEventListener('change', detectManualChanges);
+        }
+    });
 
     // Manejador para el botón de cerrar y cancelar
     function handleCloseAttempt() {

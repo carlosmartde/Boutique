@@ -4,11 +4,15 @@
 
 @section('content')
 <div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="bi bi-bag-plus me-2"></i>Nuevo Producto
-        </h5>
-    </div>
+    <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+        <i class="bi bi-bag-plus me-2"></i>Ingresar Nuevo Producto
+    </h5>
+
+    <a href="{{ route('inventario.showimportar') }}" class="btn btn-primary">
+        <i class="bi bi-file-earmark-excel me-2"></i>Importar
+    </a>
+</div>
 
     <div class="card-body">
         <form id="productForm" method="POST" action="{{ route('products.store') }}">

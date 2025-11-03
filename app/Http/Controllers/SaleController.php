@@ -16,7 +16,20 @@ class SaleController extends Controller
 {
     public function create()
     {
-        return view('sales.create');
+        $user = Auth::user();
+
+        // Verificar si tiene una caja abierta usando la relación
+        $cajaAbierta = $user->cajas()->where('estado', 'abierto')->first();
+
+        if (!$cajaAbierta) {
+            return redirect()->route('caja.apertura')
+                             ->with('warning', 'Debes abrir una caja antes de realizar ventas.');
+        }
+
+        $businessName = $user->enterprise ?? 'Mi Negocio';
+        $cashierName = $user->name ?? 'Admin';
+
+        return view('sales.create', compact('businessName', 'cashierName'));
     }
 
     public function searchProductByCode($code)
@@ -40,11 +53,9 @@ class SaleController extends Controller
             return response()->json($product);
 
         } catch (\Exception $e) {
-            // Registra el error detallado
             Log::error('Error al buscar producto: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
 
-            // Devuelve el mensaje de error específico en desarrollo
             if (config('app.debug')) {
                 return response()->json([
                     'error' => 'Error al buscar el producto: ' . $e->getMessage(),
@@ -58,115 +69,127 @@ class SaleController extends Controller
     }
 
     public function store(Request $request)
-    {
-        try {
-            DB::beginTransaction();
+{
+    try {
+        DB::beginTransaction();
 
-            // Verificar que el usuario esté autenticado
-            if (!Auth::check()) {
+        // Verificar que el usuario esté autenticado
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay usuario autenticado. Por favor, inicia sesión nuevamente.'
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        // Verificar que existe una caja abierta
+        $cajaAbierta = $user->cajas()->where('estado', 'abierto')->latest()->first();
+        
+        if (!$cajaAbierta) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay una caja abierta. Debe abrir una caja antes de realizar ventas.'
+            ], 400);
+        }
+
+        // Verificar el stock antes de procesar la venta
+        foreach ($request->products as $product) {
+            $productModel = Product::find($product['id']);
+
+            if (!$productModel) {
+                DB::rollback();
                 return response()->json([
                     'success' => false,
-                    'message' => 'No hay usuario autenticado. Por favor, inicia sesión nuevamente.'
-                ], 401);
+                    'message' => 'Producto con ID ' . $product['id'] . ' no encontrado'
+                ], 404);
             }
 
-            // Verificar el stock antes de procesar la venta
-            foreach ($request->products as $product) {
-                $productModel = Product::find($product['id']);
-
-                if (!$productModel) {
-                    DB::rollback();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Producto con ID ' . $product['id'] . ' no encontrado'
-                    ], 404);
-                }
-
-                if ($productModel->stock < $product['quantity']) {
-                    DB::rollback();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Stock insuficiente para el producto ' . $productModel->name . '. Disponible: ' . $productModel->stock
-                    ], 400);
-                }
+            if ($productModel->stock < $product['quantity']) {
+                DB::rollback();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stock insuficiente para el producto ' . $productModel->name . '. Disponible: ' . $productModel->stock
+                ], 400);
             }
+        }
 
-            $sale = Sale::create([
-                'user_id' => Auth::id(),
+        // Crear la venta, asociada a la caja abierta
+        $sale = Sale::create([
+            'user_id' => Auth::id(),
+            'caja_id' => $cajaAbierta->id,
+            'total' => $request->total,
+        ]);
+
+        // Procesar cada producto de la venta
+        foreach ($request->products as $product) {
+            $productModel = Product::find($product['id']);
+            $quantity = $product['quantity'];
+            $price = $product['price'];
+            $subtotal = $product['subtotal'];
+            $cost_total = $productModel->purchase_price * $quantity;
+            $profit = $subtotal - $cost_total;
+
+            // Crear el detalle de venta
+            SaleDetail::create([
+                'sale_id' => $sale->id,
+                'product_id' => $productModel->id,
+                'quantity' => $quantity,
+                'price' => $price,
+                'subtotal' => $subtotal,
+                'cost_total' => $cost_total,
+                'profit' => $profit
+            ]);
+
+            // Actualizar stock del producto
+            $productModel->stock -= $quantity;
+            $productModel->save();
+        }
+
+        // Actualizar el monto final de la caja abierta
+        // Sumar el total de la venta al monto actual de la caja
+        $montoActual = $cajaAbierta->monto_final ?? $cajaAbierta->monto_inicial;
+        $nuevoMontoFinal = $montoActual + $request->total;
+        
+        $cajaAbierta->update(['monto_final' => $nuevoMontoFinal]);
+
+        // Registrar movimiento de caja por la venta
+        \App\Models\CajaMovimiento::create([
+            'caja_id' => $cajaAbierta->id,
+            'user_id' => $user->id,
+            'autorizado_por' => null,
+            'tipo' => 'venta',
+            'monto' => $request->total,
+            'descripcion' => 'Venta #' . $sale->id,
+        ]);
+
+        Log::info("Venta procesada. Monto anterior: {$montoActual}, Total venta: {$request->total}, Nuevo monto: {$nuevoMontoFinal}");
+
+        DB::commit();
+
+        // CORRECCIÓN: Devolver la estructura correcta con el objeto 'sale' completo
+        return response()->json([
+            'success' => true, 
+            'message' => 'Venta realizada exitosamente',
+            'sale' => [
+                'id' => $sale->id,
                 'total' => $request->total,
-            ]);
+                'user_id' => $sale->user_id,
+                'caja_id' => $sale->caja_id,
+                'created_at' => $sale->created_at
+            ]
+        ]);
 
-            foreach ($request->products as $product) {
-                $productModel = Product::find($product['id']);
-                $quantity = $product['quantity'];
-                $price = $product['price'];
-                $subtotal = $product['subtotal'];
-                $cost_total = $productModel->purchase_price * $quantity;
-                $profit = $subtotal - $cost_total;
-
-                SaleDetail::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $productModel->id,
-                    'quantity' => $quantity,
-                    'price' => $price,
-                    'subtotal' => $subtotal,
-                    'cost_total' => $cost_total,
-                    'profit' => $profit
-                ]);
-
-                // Actualizar stock
-                $productModel->stock -= $quantity;
-                $productModel->save();
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Venta realizada exitosamente',
-                'sale' => $sale
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error al procesar la venta: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al procesar la venta: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error('Error al procesar la venta: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al procesar la venta: ' . $e->getMessage()
+        ], 500);
     }
-
-    public function cancel($id)
-    {
-        try {
-            DB::beginTransaction();
-            
-            $sale = Sale::with('details.product')->findOrFail($id);
-            
-            // Revertir el stock de los productos
-            foreach ($sale->details as $detail) {
-                $product = $detail->product;
-                $product->stock += $detail->quantity;
-                $product->save();
-            }
-            
-            // Eliminar la venta y sus detalles (usando eliminación en cascada)
-            $sale->delete();
-            
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Venta anulada correctamente'
-            ]);
-            
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error al anular la venta: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al anular la venta: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+}
 }
