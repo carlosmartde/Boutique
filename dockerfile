@@ -1,33 +1,36 @@
-# Imagen base de PHP con extensiones necesarias
-FROM php:8.2-cli
+# ---- Etapa base ----
+FROM php:8.2-fpm
 
-# Instalar dependencias del sistema y extensiones requeridas
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
+    libonig-dev \
     libzip-dev \
-    zip \
-    unzip \
-    git \
+    zip unzip git curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo_mysql zip
+    && docker-php-ext-install gd pdo pdo_mysql mbstring bcmath zip exif
 
-# Verificar que GD está habilitado
-RUN php -m | grep gd || (echo "GD not loaded" && exit 1)
-
-# Instalar Composer (desde imagen oficial)
+# Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Crear carpeta de trabajo
-WORKDIR /app
+# Crear directorio de la app
+WORKDIR /var/www/html
+
+# Copiar archivos del proyecto
 COPY . .
 
-# Ejecutar composer install dentro del contenedor con GD habilitado
-RUN composer install --optimize-autoloader --no-scripts --no-interaction --no-dev
+# Instalar dependencias de Composer
+RUN composer install --optimize-autoloader --no-scripts --no-interaction
 
-# Exponer el puerto para Laravel
-EXPOSE 8000
+# Dar permisos correctos
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Comando de inicio de la app
-CMD php artisan serve --host=0.0.0.0 --port=8000
+# Exponer puerto (Railway lo asigna automáticamente)
+EXPOSE 8080
+
+# ---- Servidor de Laravel ----
+# Usamos sh -c para expandir la variable $PORT
+CMD sh -c "php -S 0.0.0.0:\${PORT:-8080} -t public"
