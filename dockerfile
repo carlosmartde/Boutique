@@ -1,7 +1,7 @@
-# Usa la imagen oficial de PHP con extensiones comunes
-FROM php:8.2-fpm
+# Imagen base de PHP con extensiones necesarias
+FROM php:8.2-cli
 
-# Instala dependencias del sistema necesarias para GD y otras extensiones
+# Instalar dependencias del sistema y extensiones requeridas
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -11,20 +11,23 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql zip
+    && docker-php-ext-install -j$(nproc) gd pdo_mysql zip
 
-# Instala Composer desde la imagen oficial
+# Verificar que GD está habilitado
+RUN php -m | grep gd || (echo "GD not loaded" && exit 1)
+
+# Instalar Composer (desde imagen oficial)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copia los archivos de tu aplicación
+# Crear carpeta de trabajo
 WORKDIR /app
 COPY . .
 
-# Instala dependencias de PHP
+# Ejecutar composer install dentro del contenedor con GD habilitado
 RUN composer install --optimize-autoloader --no-scripts --no-interaction --no-dev
 
-# Expone el puerto (el mismo que Laravel usa por defecto)
+# Exponer el puerto para Laravel
 EXPOSE 8000
 
-# Comando de inicio
+# Comando de inicio de la app
 CMD php artisan serve --host=0.0.0.0 --port=8000
