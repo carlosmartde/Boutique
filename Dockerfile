@@ -1,57 +1,70 @@
-FROM php:8.2-cli
+# ===============================
+# STAGE 0: BUILD
+# ===============================
+FROM php:8.2-fpm-alpine AS build
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
+# Instalación de dependencias del sistema
+RUN apk add --no-cache \
+    bash \
     git \
-    curl \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
     unzip \
+    libzip-dev \
+    oniguruma-dev \
+    curl \
+    npm \
     nodejs \
-    npm
+    npm \
+    icu-dev \
+    zlib-dev \
+    && docker-php-ext-install pdo_mysql mbstring intl zip bcmath
 
-# Configurar e instalar extensión GD
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd
-
-# Instalar otras extensiones de PHP necesarias
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath zip
-
-# Instalar Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Establecer directorio de trabajo
+# Directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar archivos de dependencias primero (para cache de Docker)
-COPY composer.json composer.lock ./
+# Copiar composer.lock y composer.json para optimizar cache de composer
+COPY composer.lock composer.json ./
 
 # Instalar dependencias de PHP
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
+    && php -r "unlink('composer-setup.php');"
 
-# Copiar el resto de los archivos
+RUN composer install --no-dev --optimize-autoloader
+
+# Copiar el resto del proyecto
 COPY . .
 
-# Instalar dependencias de Node (si usas yarn, cambia a yarn)
+# Instalar dependencias de Node y compilar assets
 RUN npm install
-
-# Compilar assets
 RUN npm run build
 
-# Optimizar Laravel
-RUN php artisan config:clear && \
-    php artisan cache:clear
+# ===============================
+# STAGE 1: PRODUCTION
+# ===============================
+FROM php:8.2-fpm-alpine
 
-# Dar permisos a directorios necesarios
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Instalar extensiones necesarias
+RUN apk add --no-cache \
+    bash \
+    libzip-dev \
+    oniguruma-dev \
+    icu-dev \
+    zlib-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-install pdo_mysql mbstring intl zip bcmath
+
+WORKDIR /var/www/html
+
+# Copiar todo desde el stage de build
+COPY --from=build /var/www/html /var/www/html
+
+# Copiar entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Exponer puerto
-EXPOSE 8080
+EXPOSE 8000
 
-# Comando de inicio
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+# Ejecutar entrypoint al iniciar el contenedor
+ENTRYPOINT ["/entrypoint.sh"]
