@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip unzip git curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mbstring bcmath zip exif \
-    && docker-php-ext-enable gd
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mbstring bcmath zip exif pcntl \
+    && docker-php-ext-enable gd \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -23,7 +25,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Instalar dependencias de Composer
-RUN composer install --optimize-autoloader --no-scripts --no-interaction --no-dev
+RUN composer install --optimize-autoloader --no-scripts --no-interaction --ignore-platform-reqs
 
 # Dar permisos correctos
 RUN chown -R www-data:www-data /var/www/html \
