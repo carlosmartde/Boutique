@@ -72,8 +72,8 @@
                 </table>
             </div>
             
-            <div class="d-flex justify-content-end mt-3">
-                {{ $invoices->links() }}
+            <div class="d-flex justify-content-center mt-4">
+                {{ $invoices->onEachSide(1)->links('vendor.pagination.bootstrap-5') }}
             </div>
         </div>
     </div>

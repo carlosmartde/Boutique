@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->boolean('is_cf')->default(false)->after('printed');
+            $table->boolean('is_cf')->default(false)->after('total');
         });
     }
 

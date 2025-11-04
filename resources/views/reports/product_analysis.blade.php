@@ -149,7 +149,7 @@
                                                     <td>{{ $product->code }}</td>
                                                     <td>{{ $product->name }}</td>
                                                     <td>{{ $product->brand }}</td>
-                                                    <td class="text-right">Q{{ number_format($product->total_sales, 2) }}</td>
+                                                    <td class="text-right">${{ number_format($product->total_sales, 2) }}</td>
                                                 </tr>
                                                 @empty
                                                 <tr>
@@ -186,7 +186,7 @@
                                                     <td>{{ $product->code }}</td>
                                                     <td>{{ $product->name }}</td>
                                                     <td>{{ $product->brand }}</td>
-                                                    <td class="text-right">Q{{ number_format($product->total_sales, 2) }}</td>
+                                                    <td class="text-right">${{ number_format($product->total_sales, 2) }}</td>
                                                 </tr>
                                                 @empty
                                                 <tr>

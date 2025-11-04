@@ -16,7 +16,7 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <!-- Estilos principales -->
     <style>
         :root {
@@ -31,7 +31,8 @@
             --card-background: #ffffff;
             --sidebar-bg: #212529;
             --sidebar-text: #f8f9fa;
-            --sidebar-hover: #FFAFCC;   /*Cambiar este color si no convence*/
+            --sidebar-hover: #FFAFCC;
+            /*Cambiar este color si no convence*/
             --sidebar-active: #ff006e;
         }
 
@@ -40,16 +41,19 @@
             flex-direction: column;
             min-height: 100vh;
             background-color: var(--background-color);
-            padding-top: 56px; /* Altura de la navbar */
-            margin-bottom: 44px; /* Altura del footer */
+            padding-top: 56px;
+            /* Altura de la navbar */
+            margin-bottom: 44px;
+            /* Altura del footer */
         }
 
         .content-wrapper {
             display: flex;
             flex: 1;
             position: relative;
-            min-height: calc(100vh - 56px - 44px); 
-            padding-bottom: 44px; /* Espacio para el footer */
+            min-height: calc(100vh - 56px - 44px);
+            padding-bottom: 44px;
+            /* Espacio para el footer */
         }
 
         .sidebar {
@@ -63,7 +67,8 @@
             z-index: 100;
             padding: 20px 0;
             overflow-y: auto;
-            height: calc(100vh - 5px - 44px); /* Altura ajustada para dejar espacio al footer */
+            height: calc(100vh - 5px - 44px);
+            /* Altura ajustada para dejar espacio al footer */
         }
 
         .sidebar .nav-link {
@@ -122,11 +127,13 @@
         }
 
         footer {
-            height: 44px; /* Altura fija para el footer */
+            height: 44px;
+            /* Altura fija para el footer */
             background-color: var(--dark-color) !important;
             color: var(--light-color) !important;
             width: 100%;
-            z-index: 101; /* Asegura que esté por encima de otros elementos */
+            z-index: 101;
+            /* Asegura que esté por encima de otros elementos */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -194,7 +201,7 @@
             }
         }
     </style>
-    
+
     <!-- Estilos del select personalizado -->
     <style>
         /* Estilos para el select personalizado */
@@ -227,7 +234,7 @@
             z-index: 1031;
             scrollbar-width: thin;
             scrollbar-color: #3a86ff #f0f2f5;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
@@ -270,7 +277,7 @@
             background: #2667cc;
         }
     </style>
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     @yield('styles')
 </head>
@@ -304,69 +311,116 @@
                                     <i class="bi bi-bag-plus"></i> Nuevo Producto
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('sales.create') ? 'active' : '' }}"
                                     href="{{ route('sales.create') }}">
-                                    <i class="bi bi-cart-plus"></i>Registrar Venta
+                                    <i class="bi bi-cart-plus"></i> Registrar Ventas
                                 </a>
                             </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('caja.apertura') ? 'active' : '' }}"
+                                    href="{{ route('caja.apertura') }}">
+                                    <i class="bi bi-cash"></i> Caja
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('caja.reporte') ? 'active' : '' }}"
+                                    href="{{ route('caja.reporte') }}">
+                                    <i class="bi bi-cash-coin"></i> Reportes Cajas
+                                </a>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}"
                                     href="{{ route('inventory.index') }}">
                                     <i class="bi bi-box"></i> Inventario
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('inventario.mostrar-formulario') ? 'active' : '' }}"
                                     href="{{ route('inventario.mostrar-formulario') }}">
-                                    <i class="bi bi-plus-square"></i> Registrar Compra
+                                    <i class="bi bi-plus-square"></i> Registrar Compras
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}"
                                     href="{{ route('reports.index') }}">
                                     <i class="bi bi-file-earmark-bar-graph"></i> Reportes de Ventas
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('purchase_reports.index') ? 'active' : '' }}"
                                     href="{{ route('purchase_reports.index') }}">
                                     <i class="bi bi-cart-check"></i> Reportes de Compras
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('invoices.index') ? 'active' : '' }}"
                                     href="{{ route('invoices.index') }}">
                                     <i class="bi bi-receipt"></i> Facturas
                                 </a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('product_analysis.index') ? 'active' : '' }}"
                                     href="{{ route('product_analysis.index') }}">
                                     <i class="bi bi-graph-up"></i> Análisis de Productos
                                 </a>
                             </li>
+
                             @if(Auth::user()->rol === 'gerente')
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('users.management') ? 'active' : '' }}"
-                                    href="{{ route('users.management') }}">
-                                    <i class="bi bi-people"></i> Gestión de Usuarios
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}"
-                                    href="{{ route('register') }}">
-                                    <i class="bi bi-person-plus"></i> Crear Usuario
-                                </a>
-                            </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('users.management') ? 'active' : '' }}"
+                                        href="{{ route('users.management') }}">
+                                        <i class="bi bi-people"></i> Gestión de Usuarios
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('barcodes.index') ? 'active' : '' }}"
+                                        href="{{ route('barcodes.index') }}">
+                                        <i class="bi bi-upc-scan"></i> Códigos de Barras
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}"
+                                        href="{{ route('register') }}">
+                                        <i class="bi bi-person-plus"></i> Crear Usuario
+                                    </a>
+                                </li>
                             @endif
+                        @else
+                            {{-- Opciones para usuarios que NO son admin ni gerente --}}
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('caja.apertura') ? 'active' : '' }}"
+                                    href="{{ route('caja.apertura') }}">
+                                    <i class="bi bi-cash"></i> Caja
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('sales.create') ? 'active' : '' }}"
+                                    href="{{ route('sales.create') }}">
+                                    <i class="bi bi-cart-plus"></i> Nueva Venta
+                                </a>
+                            </li>
                         @endif
+
                         <li class="nav-item mt-3">
                             <form action="{{ route('logout') }}" method="POST" class="px-3">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-danger w-100" style="border-width: 2px; color: white;">
+                                <button type="submit" class="btn btn-outline-danger w-100"
+                                    style="border-width: 2px; color: white;">
                                     <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                                </button>                                                             
+                                </button>
                             </form>
                         </li>
                     </ul>
@@ -400,7 +454,7 @@
             }
         });
     </script>
-    
+
     <script>
         // Select personalizado script
         document.addEventListener('DOMContentLoaded', function () {
@@ -475,15 +529,15 @@
                         const rect = trigger.getBoundingClientRect();
                         const viewportHeight = window.innerHeight;
                         const footerHeight = 60; // altura aproximada del footer
-                        
+
                         options.style.position = 'fixed';
                         options.style.width = `${rect.width}px`;
                         options.style.left = `${rect.left}px`;
-                        
+
                         // Calcular espacio disponible arriba y abajo
                         const spaceBelow = viewportHeight - rect.bottom - footerHeight;
                         const spaceAbove = rect.top;
-                        
+
                         if (spaceBelow >= 200) {
                             // Si hay suficiente espacio abajo
                             options.style.top = `${rect.bottom + window.scrollY}px`;
@@ -535,4 +589,5 @@
     <script src="{{ asset('js/user-management.js') }}"></script>
     @yield('scripts')
 </body>
+
 </html>

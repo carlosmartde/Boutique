@@ -11,7 +11,7 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'code', 'name', 'brand', 'purchase_price', 'sale_price', 'stock'
+        'code', 'name', 'brand', 'purchase_price', 'sale_price', 'stock', 'First_entry'
     ];
 
     // Si la tabla no se llama 'products', puedes especificarlo aquí
@@ -20,6 +20,17 @@ class Product extends Model
     public function saleDetails()
     {
         return $this->hasMany(SaleDetail::class);
+    }
+
+    /**
+     * Verifica si un código de barras ya existe
+     *
+     * @param string $barcode
+     * @return bool
+     */
+    public static function barcodeExists($barcode)
+    {
+        return static::where('code', $barcode)->exists();
     }
 }
 

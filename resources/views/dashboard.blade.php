@@ -31,7 +31,7 @@
                     <div class="icon-wrapper mb-3">
                         <i class="bi bi-cart-plus fs-1 text-primary"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Ventas</h5>
+                    <h5 class="card-title fw-bold">Registrar Ventas</h5>
                     <p class="card-text text-muted">Registra nuevas ventas</p>
                     <a href="{{ route('sales.create') }}" class="btn btn-primary w-100">
                         <i class="bi bi-receipt me-2"></i>Ir a Ventas
@@ -61,7 +61,7 @@
                     <div class="icon-wrapper mb-3">
                         <i class="bi bi-plus-square fs-1 text-primary"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Registrar Compra</h5>
+                    <h5 class="card-title fw-bold">Registrar Compras</h5>
                     <p class="card-text text-muted">Actualiza stock y precios de productos existentes</p>
                     <a href="{{ route('inventario.mostrar-formulario') }}" class="btn btn-primary w-100">
                         <i class="bi bi-arrow-up-circle me-2"></i>Actualizar Stock
@@ -99,6 +99,39 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Nueva tarjeta para acceso a Facturas -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-receipt-cutoff fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Facturas</h5>
+                    <p class="card-text text-muted">Gestiona y consulta las facturas</p>
+                    <a href="{{ route('invoices.index') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-file-text me-2"></i>Ver Facturas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+         <!-- Tarjeta de Análisis de Productos -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-graph-up fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Análisis de Productos</h5>
+                    <p class="card-text text-muted">Analiza el rendimiento de tus productos</p>
+                    <a href="{{ route('product_analysis.index') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-chart-bar me-2"></i>Ver Análisis
+                    </a>
+                </div>
+            </div>
+        </div>
 
         <!-- Nueva card para Gestión de Usuarios -->
         @if(Auth::user()->rol === 'gerente')
@@ -112,6 +145,22 @@
                     <p class="card-text text-muted">Administra los usuarios del sistema</p>
                     <a href="{{ route('users.management') }}" class="btn btn-primary w-100">
                         <i class="bi bi-gear-wide-connected me-2"></i>Administrar Usuarios
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card para el Generador de Códigos de Barras -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="icon-wrapper mb-3">
+                        <i class="bi bi-upc-scan fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Códigos de Barras</h5>
+                    <p class="card-text text-muted">Genera e imprime códigos de barras</p>
+                    <a href="{{ route('barcodes.index') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-printer me-2"></i>Generar Códigos
                     </a>
                 </div>
             </div>
@@ -131,23 +180,8 @@
                 </div>
             </div>
         </div>
-        @endif
-        
-        <!-- Tarjeta de Análisis de Productos -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center p-4">
-                    <div class="icon-wrapper mb-3">
-                        <i class="bi bi-graph-up fs-1 text-primary"></i>
-                    </div>
-                    <h5 class="card-title fw-bold">Análisis de Productos</h5>
-                    <p class="card-text text-muted">Analiza el rendimiento de tus productos</p>
-                    <a href="{{ route('product_analysis.index') }}" class="btn btn-primary w-100">
-                        <i class="bi bi-chart-bar me-2"></i>Ver Análisis
-                    </a>
-                </div>
-            </div>
-        </div>
+        @endif      
+
     </div>
 </div>
 

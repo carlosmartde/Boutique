@@ -73,13 +73,21 @@ class ProductReportController extends Controller
             ->limit(10)
             ->get();
 
-        return view('reports.product_analysis', compact(
-            'topProducts',
-            'leastProducts',
-            'topRevenue',
-            'period',
-            'startDate',
-            'endDate'
-        ));
+        // Obtener productos con menor ingreso
+        $leastRevenue = (clone $query)
+            ->orderBy('total_sales', 'asc')
+            ->limit(10)
+            ->get();
+
+        return view('reports.product_analysis', [
+            'topProducts' => $topProducts,
+            'leastProducts' => $leastProducts,
+            'topRevenue' => $topRevenue,
+            'topRevenueProducts' => $topRevenue,
+            'leastRevenueProducts' => $leastRevenue,
+            'period' => $period,
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
     }
 }
