@@ -2,18 +2,39 @@
 FROM php:8.2-fpm
 
 # Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libpng-dev \
     libonig-dev \
     libzip-dev \
-    zip unzip git curl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mbstring bcmath zip exif pcntl \
-    && docker-php-ext-enable gd \
-    && pecl install redis \
-    && docker-php-ext-enable redis
+    zip \
+    unzip \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        gd \
+        pdo \
+        pdo_mysql \
+        mbstring \
+        bcmath \
+        zip \
+        exif \
+        pcntl \
+    && docker-php-ext-enable \
+        gd \
+        pdo \
+        pdo_mysql \
+        mbstring \
+        bcmath \
+        zip \
+        exif \
+        pcntl
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -21,11 +42,17 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Crear directorio de la app
 WORKDIR /var/www/html
 
-# Copiar archivos del proyecto
-COPY . .
+# Copiar composer.json y composer.lock primero para aprovechar la caché de Docker
+COPY composer.json composer.lock ./
 
 # Instalar dependencias de Composer
-RUN composer install --optimize-autoloader --no-scripts --no-interaction --ignore-platform-reqs
+RUN composer install --no-scripts --no-autoloader --no-dev
+
+# Copiar el resto de los archivos del proyecto
+COPY . .
+
+# Generar el autoloader optimizado
+RUN composer dump-autoload --optimize --no-dev
 
 # Dar permisos correctos
 RUN chown -R www-data:www-data /var/www/html \
